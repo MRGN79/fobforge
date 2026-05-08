@@ -12,8 +12,8 @@ import {
   getContacts, getBadges, getAssignments,
   addBadge, assignBadge, removeBadge,
 } from './db.js';
-import { initUI, renderContacts, showError,
-         showSuccess, showSystemError, setLoading } from './ui.js';
+import { initUI, renderContacts,
+         showSuccess, showSystemError, setLoading } from './ui.js';         showSuccess, showSystemError, setLoading } from './ui.js';
 
 // ---------------------------------------------------------------------------
 // State
