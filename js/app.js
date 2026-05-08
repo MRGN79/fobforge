@@ -34,7 +34,20 @@ const state = {
 // ---------------------------------------------------------------------------
 
 export async function bootstrap() {
+
+  // Debug — remove after testing
+  document.body.innerHTML += '<div id="debug" style="position:fixed;bottom:0;left:0;right:0;background:#111;color:#0f0;font-size:11px;padding:8px;z-index:9999;max-height:40vh;overflow-y:auto;font-family:monospace;"></div>';
+  
+  const log = msg => {
+    const el = document.getElementById('debug');
+    if (el) el.innerHTML += msg + '<br>';
+  };
+
+  window.onerror = (msg, src, line) => log('ERROR: ' + msg + ' (' + line + ')');
+
+  log('bootstrap start');
   initI18n();
+  log('i18n ok');
 
   // Load sql.js from CDN (pinned version)
   try {
