@@ -32,10 +32,23 @@
   <!-- App mounts here — see ui.js _renderShell() -->
   <div id="app"></div>
 
+  <!-- Wait for sql.js before bootstrapping -->
+  <script>
+    function waitForSqlJs(callback) {
+      if (typeof initSqlJs === 'function') {
+        callback();
+      } else {
+        setTimeout(function() { waitForSqlJs(callback); }, 50);
+      }
+    }
+  </script>
+
   <!-- Application entry point (ES modules) -->
   <script type="module">
     import { bootstrap } from './js/app.js';
-    bootstrap();
+    waitForSqlJs(function() {
+      bootstrap();
+    });
   </script>
 
 </body>
