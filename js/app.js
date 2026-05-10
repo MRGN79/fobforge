@@ -104,6 +104,7 @@ export async function bootstrap() {
   });
 
   _log('ui init ok — ready');
+  return true;
 }
 
 // ---------------------------------------------------------------------------
