@@ -104,6 +104,11 @@ export async function bootstrap() {
   });
 
   _log('ui init ok — ready');
+
+  // Hide loading screen
+  const screen = document.getElementById('loading-screen');
+  if (screen) screen.style.display = 'none';
+
   return true;
 }
 
