@@ -32,66 +32,19 @@ const state = {
 };
 
 // ---------------------------------------------------------------------------
-// Debug panel (mobile — remove after testing)
-// ---------------------------------------------------------------------------
-
-function _initDebug() {
-  const panel = document.createElement('div');
-  panel.id = 'debug';
-  panel.style.cssText = `
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: #111;
-    color: #00ff88;
-    font-size: 11px;
-    padding: 8px;
-    z-index: 9999;
-    max-height: 35vh;
-    overflow-y: auto;
-    font-family: monospace;
-    border-top: 1px solid #333;
-  `;
-  document.body.appendChild(panel);
-
-  window.onerror = (msg, src, line) => {
-    _log('ERROR: ' + msg + ' (line ' + line + ')');
-  };
-
-  window.onunhandledrejection = e => {
-    _log('PROMISE ERROR: ' + (e.reason?.message || e.reason));
-  };
-}
-
-function _log(msg) {
-  const el = document.getElementById('debug');
-  if (el) {
-    el.innerHTML += msg + '<br>';
-    el.scrollTop = el.scrollHeight;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Bootstrap
 // ---------------------------------------------------------------------------
 
 export async function bootstrap() {
-  _initDebug();
-  _log('bootstrap start');
-
   initI18n();
-  _log('i18n ok');
 
-  // Load sql.js from CDN (pinned version)
   try {
-    _log('loading sql.js...');
     const SQL = await initSqlJs({
       locateFile: file =>
         `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`,
     });
     initDb(SQL);
-    _log('sql.js ok');
   } catch (e) {
-    _log('sql.js FAILED: ' + e.message);
     showSystemError('error.sqljsload');
     return;
   }
@@ -102,8 +55,6 @@ export async function bootstrap() {
     onRemoveBadge: handleRemoveBadge,
     onSave:        handleSave,
   });
-
-  _log('ui init ok — ready');
 
   // Hide loading screen
   const screen = document.getElementById('loading-screen');
@@ -116,19 +67,13 @@ export async function bootstrap() {
 // Handlers
 // ---------------------------------------------------------------------------
 
-// Called by ui.js when the user selects or drops a .prj file.
-
 export async function handleFileLoad(arrayBuffer, fileName) {
-  _log('loading file: ' + fileName);
   setLoading(true);
   closeDb();
 
   try {
     const { dbBytes, rawXtz0, rawXtz1 } = await readPrj(arrayBuffer);
-    _log('prj parsed ok');
-
     loadDb(dbBytes);
-    _log('db loaded ok');
 
     state.loaded   = true;
     state.fileName = fileName;
@@ -136,42 +81,33 @@ export async function handleFileLoad(arrayBuffer, fileName) {
     state.rawXtz1  = rawXtz1;
 
     _refreshState();
-    _log('contacts: ' + state.contacts.length);
-    _log('badges: '   + state.badges.length);
 
   } catch (e) {
-    _log('ERROR loading file: ' + e.message);
+    console.error(e);
     showSystemError('error.file.load');
   } finally {
     setLoading(false);
   }
 }
 
-// Called by ui.js when the user submits the add badge form.
-// payload: { memberId, uid, type, note }
-
 export function handleAddBadge({ memberId, uid, type, note }) {
   uid = uid.trim().toUpperCase();
-  _log('addBadge: ' + uid);
 
   const uidResult = validateUID(uid, state.badges);
   if (!uidResult.valid) {
-    _log('uid invalid: ' + uidResult.error);
     return { ok: false, field: 'uid', error: uidResult.error };
   }
 
   const assignResult = validateAssignment(memberId, uid, state.assignments);
   if (!assignResult.valid) {
-    _log('assign invalid: ' + assignResult.error);
     return { ok: false, field: 'assign', error: assignResult.error };
   }
 
   try {
     addBadge(uid, type, note);
     assignBadge(memberId, uid);
-    _log('badge added ok');
   } catch (e) {
-    _log('ERROR adding badge: ' + e.message);
+    console.error(e);
     return { ok: false, field: 'system', error: 'error.save' };
   }
 
@@ -179,27 +115,19 @@ export function handleAddBadge({ memberId, uid, type, note }) {
   return { ok: true };
 }
 
-// Called by ui.js when the user clicks remove on a badge.
-// payload: { memberId, badgeId }
-
 export function handleRemoveBadge({ memberId, badgeId }) {
-  _log('removeBadge: ' + badgeId);
   try {
     removeBadge(memberId, badgeId);
-    _log('badge removed ok');
   } catch (e) {
-    _log('ERROR removing badge: ' + e.message);
+    console.error(e);
     showSystemError('error.save');
     return;
   }
   _refreshState();
 }
 
-// Called by ui.js when the user clicks Save.
-
 export async function handleSave() {
   if (!state.loaded) return;
-  _log('saving...');
   setLoading(true);
 
   try {
@@ -211,11 +139,10 @@ export async function handleSave() {
     });
 
     _downloadFile(prjBytes, state.fileName);
-    _log('saved ok');
     showSuccess('success.file.saved');
 
   } catch (e) {
-    _log('ERROR saving: ' + e.message);
+    console.error(e);
     showSystemError('error.save');
   } finally {
     setLoading(false);
