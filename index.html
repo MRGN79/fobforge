@@ -78,6 +78,11 @@
       console.log('[FobForge]', msg);
     }
 
+    function hideLoadingScreen() {
+      var screen = document.getElementById('loading-screen');
+      if (screen) screen.style.display = 'none';
+    }
+
     window.onerror = function(msg, src, line) {
       _log('ERROR: ' + msg + ' (line ' + line + ')');
     };
@@ -85,6 +90,9 @@
     window.onunhandledrejection = function(e) {
       _log('PROMISE ERROR: ' + (e.reason && e.reason.message || e.reason));
     };
+
+    // Safety fallback — hide loading screen after 8 seconds no matter what
+    setTimeout(hideLoadingScreen, 8000);
 
     _log('Loading sql.js...');
   </script>
@@ -100,11 +108,6 @@
   <script type="module">
     import { bootstrap } from './js/app.js';
 
-    function hideLoadingScreen() {
-      var screen = document.getElementById('loading-screen');
-      if (screen) screen.style.display = 'none';
-    }
-
     function waitForSqlJs() {
       return new Promise(function(resolve) {
         function check() {
@@ -119,12 +122,18 @@
     }
 
     waitForSqlJs()
-  .then(function() {
-    return bootstrap();
-  })
-  .catch(function(e) {
-    _log('FATAL: ' + (e.message || e));
-  });
+      .then(function() {
+        _log('sql.js ready — bootstrap...');
+        return bootstrap();
+      })
+      .then(function() {
+        _log('ready');
+        hideLoadingScreen();
+      })
+      .catch(function(e) {
+        _log('FATAL: ' + (e.message || e));
+        hideLoadingScreen();
+      });
   </script>
 
 </body>
