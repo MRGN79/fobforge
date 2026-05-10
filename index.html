@@ -9,7 +9,7 @@
 
   <title>FobForge</title>
 
-  <!-- Favicon (inline SVG as data URI — no external file needed) -->
+  <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
       <text y='.9em' font-size='90'>🔑</text>
@@ -23,32 +23,113 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/main.css">
-
-  <!-- sql.js (pinned version — WebAssembly SQLite) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
 </head>
 <body>
 
-  <!-- App mounts here — see ui.js _renderShell() -->
+  <!-- Loading screen — visible before JS takes over -->
+  <div id="loading-screen" style="
+    position: fixed;
+    inset: 0;
+    background: #0d0d0d;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 9999;
+    font-family: 'JetBrains Mono', monospace;
+  ">
+    <span style="font-size: 40px;">🔑</span>
+    <span style="color: #00d4a0; font-size: 14px;">FobForge</span>
+    <span id="loading-status" style="color: #666; font-size: 12px;">
+      Loading...
+    </span>
+  </div>
+
+  <!-- Debug panel — fixed at bottom, always visible -->
+  <div id="debug" style="
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #111;
+    color: #00ff88;
+    font-size: 11px;
+    padding: 8px 12px;
+    z-index: 99999;
+    max-height: 30vh;
+    overflow-y: auto;
+    font-family: monospace;
+    border-top: 1px solid #333;
+    display: none;
+  "></div>
+
+  <!-- App mounts here -->
   <div id="app"></div>
 
-  <!-- Wait for sql.js before bootstrapping -->
+  <!-- Early error capture -->
   <script>
-    function waitForSqlJs(callback) {
-      if (typeof initSqlJs === 'function') {
-        callback();
-      } else {
-        setTimeout(function() { waitForSqlJs(callback); }, 50);
-      }
+    var _debug = document.getElementById('debug');
+    var _status = document.getElementById('loading-status');
+
+    function _log(msg) {
+      _debug.style.display = 'block';
+      _debug.innerHTML += msg + '<br>';
+      _debug.scrollTop = _debug.scrollHeight;
+      if (_status) _status.textContent = msg;
+      console.log('[FobForge]', msg);
     }
+
+    window.onerror = function(msg, src, line) {
+      _log('ERROR: ' + msg + ' (line ' + line + ')');
+    };
+
+    window.onunhandledrejection = function(e) {
+      _log('PROMISE ERROR: ' + (e.reason && e.reason.message || e.reason));
+    };
+
+    _log('Loading sql.js...');
   </script>
 
-  <!-- Application entry point (ES modules) -->
+  <!-- sql.js (pinned version — WebAssembly SQLite) -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"
+    onload="_log('sql.js loaded — starting app...')"
+    onerror="_log('ERROR: failed to load sql.js')">
+  </script>
+
+  <!-- Application entry point -->
   <script type="module">
     import { bootstrap } from './js/app.js';
-    waitForSqlJs(function() {
-      bootstrap();
-    });
+
+    function hideLoadingScreen() {
+      var screen = document.getElementById('loading-screen');
+      if (screen) screen.style.display = 'none';
+    }
+
+    function waitForSqlJs() {
+      return new Promise(function(resolve) {
+        function check() {
+          if (typeof initSqlJs === 'function') {
+            resolve();
+          } else {
+            setTimeout(check, 50);
+          }
+        }
+        check();
+      });
+    }
+
+    waitForSqlJs()
+      .then(function() {
+        _log('sql.js ready — bootstrap...');
+        return bootstrap();
+      })
+      .then(function() {
+        _log('bootstrap ok');
+        hideLoadingScreen();
+      })
+      .catch(function(e) {
+        _log('FATAL: ' + (e.message || e));
+      });
   </script>
 
 </body>
