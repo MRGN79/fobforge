@@ -119,17 +119,12 @@
     }
 
     waitForSqlJs()
-      .then(function() {
-        _log('sql.js ready — bootstrap...');
-        return bootstrap();
-      })
-      .then(function() {
-        _log('bootstrap ok');
-        hideLoadingScreen();
-      })
-      .catch(function(e) {
-        _log('FATAL: ' + (e.message || e));
-      });
+  .then(function() {
+    return bootstrap();
+  })
+  .catch(function(e) {
+    _log('FATAL: ' + (e.message || e));
+  });
   </script>
 
 </body>
