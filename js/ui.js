@@ -36,7 +36,7 @@ export function initUI(callbacks) {
 // ---------------------------------------------------------------------------
 
 function _renderShell() {
-  document.body.innerHTML = `
+  document.getElementById('app').innerHTML = `
     <header class="header">
       <div class="header__brand">
         <span class="header__logo">FobForge</span>
