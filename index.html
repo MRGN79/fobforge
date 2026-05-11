@@ -127,13 +127,15 @@
         return bootstrap();
       })
       .then(function() {
-        _log('ready');
-        hideLoadingScreen();
-      })
-      .catch(function(e) {
-        _log('FATAL: ' + (e.message || e));
-        hideLoadingScreen();
-      });
+  _log('ready');
+  var s = document.getElementById('loading-screen');
+  if (s) s.parentNode.removeChild(s);
+})
+.catch(function(e) {
+  _log('FATAL: ' + (e.message || e));
+  var s = document.getElementById('loading-screen');
+  if (s) s.parentNode.removeChild(s);
+});
   </script>
 
 </body>
