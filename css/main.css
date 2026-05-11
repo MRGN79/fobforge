@@ -627,6 +627,11 @@ body {
   color:           var(--color-accent);
 }
 
+/* Fix: hidden attribute must override display:flex */
+.loading[hidden] {
+  display: none;
+}
+
 /* ---------------------------------------------------------------------------
    Scrollbar (panel right)
 --------------------------------------------------------------------------- */
