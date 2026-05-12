@@ -31,7 +31,9 @@ const strings = {
 
     // Contacts
     'contacts.title':           'Contacts',
+    'contacts.search':          'Search contacts…',
     'contacts.empty':           'No contacts found in this project',
+    'contacts.noresults':       'No contacts match your search',
     'contacts.select':          'Select a contact from the list',
     'contacts.badge_count':     'badges',
 
@@ -94,7 +96,9 @@ const strings = {
 
     // Contacts
     'contacts.title':           'Contactos',
+    'contacts.search':          'Buscar contactos…',
     'contacts.empty':           'No se encontraron contactos en este proyecto',
+    'contacts.noresults':       'Ningún contacto coincide con la búsqueda',
     'contacts.select':          'Selecciona un contacto de la lista',
     'contacts.badge_count':     'badges',
 

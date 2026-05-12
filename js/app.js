@@ -13,7 +13,7 @@ import {
   addBadge, assignBadge, removeBadge,
 } from './db.js';
 import {
-  initUI, renderContacts, clearSelection,
+  initUI, renderContacts, clearSelection, clearSearch,
   showSuccess, showSystemError, setLoading, setSaveEnabled, setDirty, resetUI,
 } from './ui.js';
 
@@ -76,6 +76,7 @@ export async function bootstrap() {
 export function handleNew() {
   closeDb();
   clearSelection();
+  clearSearch();
 
   try {
     createEmptyDb();
@@ -98,6 +99,7 @@ export async function handleFileLoad(arrayBuffer, fileName) {
   setLoading(true);
   closeDb();
   clearSelection();
+  clearSearch();
 
   try {
     const { dbBytes, rawXtz0, rawXtz1 } = await readPrj(arrayBuffer);

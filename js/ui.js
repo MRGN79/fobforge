@@ -22,11 +22,20 @@ let _callbacks = {
 // Current selected contact ID
 let _selectedMemberId = null;
 
+// Active search query for the contact list
+let _searchQuery = '';
+
 // Tracks unsaved changes — set externally via setDirty()
 let _isDirty = false;
 
 export function clearSelection() {
   _selectedMemberId = null;
+}
+
+export function clearSearch() {
+  _searchQuery = '';
+  const input = document.getElementById('contact-search');
+  if (input) input.value = '';
 }
 
 export function setDirty(dirty) {
@@ -48,6 +57,7 @@ export function initUI(callbacks) {
   _bindCloseButton();
   _bindNewButton();
   _bindRemoveButton();
+  _bindSearchInput();
 }
 
 // ---------------------------------------------------------------------------
@@ -81,6 +91,14 @@ function _renderShell() {
       <section class="panel panel--left">
         <div class="panel__header">
           <span class="panel__title" data-i18n="contacts.title"></span>
+        </div>
+
+        <div id="search-bar" class="search-bar" hidden>
+          <input type="search"
+                 id="contact-search"
+                 class="search-input"
+                 data-i18n-placeholder="contacts.search"
+                 autocomplete="off">
         </div>
 
         <div id="drop-zone" class="drop-zone">
@@ -124,11 +142,14 @@ function _renderShell() {
 // i18n helpers
 // ---------------------------------------------------------------------------
 
-// Apply translations to all elements with data-i18n attribute.
+// Apply translations to all elements with data-i18n / data-i18n-placeholder.
 
 function _applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
   });
 }
 
@@ -251,6 +272,14 @@ function _bindNewButton() {
   });
 }
 
+function _bindSearchInput() {
+  document.addEventListener('input', e => {
+    if (e.target.id !== 'contact-search') return;
+    _searchQuery = e.target.value;
+    if (_currentState) renderContacts(_currentState);
+  });
+}
+
 function _bindRemoveButton() {
   document.addEventListener('click', e => {
     const btn = e.target.closest('[data-action="remove"]');
@@ -270,8 +299,10 @@ export function resetUI() {
   _currentState     = null;
   _selectedMemberId = null;
   setDirty(false);
+  clearSearch();
 
   const dropZone    = document.getElementById('drop-zone');
+  const searchBar   = document.getElementById('search-bar');
   const contactList = document.getElementById('contact-list');
   const btnSave     = document.getElementById('btn-save');
   const btnOpen     = document.getElementById('btn-open');
@@ -279,6 +310,7 @@ export function resetUI() {
   const panel       = document.getElementById('panel-right');
 
   if (dropZone)    { dropZone.hidden = false; }
+  if (searchBar)   { searchBar.hidden = true; }
   if (contactList) { contactList.hidden = true; contactList.innerHTML = ''; }
   if (btnSave)     { btnSave.disabled = true; }
   if (btnOpen)     { btnOpen.hidden = true; }
@@ -303,13 +335,15 @@ let _currentState = null;
 export function renderContacts(state) {
   _currentState = state;
 
-  const dropZone   = document.getElementById('drop-zone');
+  const dropZone    = document.getElementById('drop-zone');
   const contactList = document.getElementById('contact-list');
-  const btnSave    = document.getElementById('btn-save');
-  const btnOpen    = document.getElementById('btn-open');
-  const btnClose   = document.getElementById('btn-close');
+  const searchBar   = document.getElementById('search-bar');
+  const btnSave     = document.getElementById('btn-save');
+  const btnOpen     = document.getElementById('btn-open');
+  const btnClose    = document.getElementById('btn-close');
 
   if (dropZone)    dropZone.hidden    = true;
+  if (searchBar)   searchBar.hidden   = false;
   if (contactList) contactList.hidden = false;
   if (btnSave)     btnSave.disabled   = false;
   if (btnOpen)     btnOpen.hidden     = false;
@@ -326,7 +360,24 @@ export function renderContacts(state) {
     return;
   }
 
-  contactList.innerHTML = state.contacts.map(contact => {
+  const query    = _searchQuery.trim().toLowerCase();
+  const filtered = query
+    ? state.contacts.filter(c =>
+        `${c.name} ${c.surname}`.toLowerCase().includes(query) ||
+        c.apts.some(a => (a.apt ?? '').toLowerCase().includes(query))
+      )
+    : state.contacts;
+
+  if (!filtered.length) {
+    contactList.innerHTML = `
+      <p class="contact-list__empty" data-i18n="contacts.noresults"></p>
+    `;
+    _applyI18n();
+    _syncPanel(state);
+    return;
+  }
+
+  contactList.innerHTML = filtered.map(contact => {
     const badgeCount = state.assignments.filter(
       a => a.memberId === contact.id
     ).length;
