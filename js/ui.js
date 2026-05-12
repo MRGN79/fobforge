@@ -4,6 +4,7 @@
 // No direct database access — all data comes from state via renderContacts().
 
 import { t, getLang, setLang } from './i18n.js';
+import { VERSION } from './version.js';
 
 // ---------------------------------------------------------------------------
 // Callbacks registered by app.js via initUI()
@@ -48,6 +49,7 @@ function _renderShell() {
     <header class="header">
       <div class="header__brand">
         <span class="header__logo">FobForge</span>
+        <span class="header__version">v${VERSION}</span>
         <span class="header__subtitle" data-i18n="app.subtitle"></span>
       </div>
       <div class="header__actions">

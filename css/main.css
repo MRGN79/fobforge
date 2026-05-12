@@ -83,6 +83,16 @@ body {
   letter-spacing: -0.02em;
 }
 
+.header__version {
+  font-family:   var(--font-mono);
+  font-size:     10px;
+  color:         var(--color-muted);
+  border:        1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding:       1px 6px;
+  align-self:    center;
+}
+
 .header__subtitle {
   font-size: 12px;
   color:     var(--color-muted);
