@@ -75,6 +75,7 @@ export function getContacts() {
     FROM MEMBER m
     LEFT JOIN MEMBER_APT ma ON ma.ID_MEMBER = m.ID_MEMBER
     LEFT JOIN APT a         ON a.ID_APT     = ma.ID_APT
+    GROUP BY m.ID_MEMBER
     ORDER BY m.Surname, m.Name
   `;
 
@@ -180,12 +181,12 @@ export function removeBadge(memberId, badgeId) {
   );
 
   // Check if badge is still assigned to anyone else
-  const result = _db.exec(
-    'SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?',
-    [badgeId]
-  );
+  const stmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?');
+  stmt.bind([badgeId]);
+  stmt.step();
+  const count = stmt.getAsObject()['cnt'] ?? 0;
+  stmt.free();
 
-  const count = result[0]?.values[0][0] ?? 0;
   if (count === 0) {
     _db.run('DELETE FROM BADGE WHERE ID_BADGE = ?', [badgeId]);
   }

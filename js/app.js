@@ -13,8 +13,8 @@ import {
   addBadge, assignBadge, removeBadge,
 } from './db.js';
 import {
-  initUI, renderContacts,
-  showSuccess, showSystemError, setLoading,
+  initUI, renderContacts, clearSelection,
+  showSuccess, setLoading, setSaveEnabled,
 } from './ui.js';
 
 // ---------------------------------------------------------------------------
@@ -56,10 +56,6 @@ export async function bootstrap() {
     onSave:        handleSave,
   });
 
-  // Hide loading screen
-  const screen = document.getElementById('loading-screen');
-  if (screen) screen.style.display = 'none';
-
   return true;
 }
 
@@ -70,6 +66,7 @@ export async function bootstrap() {
 export async function handleFileLoad(arrayBuffer, fileName) {
   setLoading(true);
   closeDb();
+  clearSelection();
 
   try {
     const { dbBytes, rawXtz0, rawXtz1 } = await readPrj(arrayBuffer);
@@ -120,15 +117,16 @@ export function handleRemoveBadge({ memberId, badgeId }) {
     removeBadge(memberId, badgeId);
   } catch (e) {
     console.error(e);
-    showSystemError('error.save');
-    return;
+    return { ok: false };
   }
   _refreshState();
+  return { ok: true };
 }
 
 export async function handleSave() {
   if (!state.loaded) return;
   setLoading(true);
+  setSaveEnabled(false);
 
   try {
     const dbBytes  = exportDb();
@@ -146,6 +144,7 @@ export async function handleSave() {
     showSystemError('error.save');
   } finally {
     setLoading(false);
+    setSaveEnabled(true);
   }
 }
 
@@ -167,5 +166,5 @@ function _downloadFile(bytes, fileName) {
   a.href     = url;
   a.download = fileName;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

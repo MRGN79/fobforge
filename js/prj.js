@@ -428,12 +428,13 @@ export async function writePrj({ dbBytes, rawXtz0, rawXtz1 }) {
     { name: 'DCDB/Device_contacts.db3', data: dbBytes },
   ], ki);
 
-  // Rebuild outer .prj
-  const prjZip = await buildZip([
-    { name: '0.xtz',    data: rawXtz0  },
-    { name: 'DCDB.xtz', data: dcdbZip  },
-    { name: '1.xtz',    data: rawXtz1  },
-  ], ko);
+  // Rebuild outer .prj (preserve only entries that existed in the original)
+  const outerFiles = [
+    rawXtz0 ? { name: '0.xtz',    data: rawXtz0 } : null,
+               { name: 'DCDB.xtz', data: dcdbZip },
+    rawXtz1 ? { name: '1.xtz',    data: rawXtz1 } : null,
+  ].filter(Boolean);
+  const prjZip = await buildZip(outerFiles, ko);
 
   return prjZip;
 }

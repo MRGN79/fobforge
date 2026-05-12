@@ -19,6 +19,10 @@ let _callbacks = {
 // Current selected contact ID
 let _selectedMemberId = null;
 
+export function clearSelection() {
+  _selectedMemberId = null;
+}
+
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
@@ -47,6 +51,8 @@ function _renderShell() {
           <option value="en" data-i18n="lang.en"></option>
           <option value="es" data-i18n="lang.es"></option>
         </select>
+        <button id="btn-open" class="btn btn--secondary" hidden
+                data-i18n="file.open"></button>
         <button id="btn-save" class="btn btn--primary" disabled
                 data-i18n="file.save"></button>
       </div>
@@ -81,6 +87,9 @@ function _renderShell() {
 
     </main>
 
+    <div id="drag-overlay" class="drag-overlay" hidden>
+      <span data-i18n="file.drop"></span>
+    </div>
     <div id="toast" class="toast" hidden></div>
     <div id="loading" class="loading" hidden>
       <span data-i18n="app.loading"></span>
@@ -112,11 +121,10 @@ function _bindLangSelector() {
   document.addEventListener('change', e => {
     if (e.target.id !== 'lang-selector') return;
     setLang(e.target.value);
-    _applyI18n();
-    // Re-render contact list if loaded
-    if (_selectedMemberId) {
-      const panel = document.getElementById('panel-right');
-      if (panel) _renderBadgePanel(panel, _currentState);
+    if (_currentState) {
+      renderContacts(_currentState);
+    } else {
+      _applyI18n();
     }
   });
 }
@@ -132,31 +140,53 @@ function _bindFileEvents() {
     if (file) _loadFile(file);
   });
 
-  document.addEventListener('dragover', e => {
-    const dz = document.getElementById('drop-zone');
-    if (!dz) return;
+  document.addEventListener('click', e => {
+    if (e.target.id === 'btn-open' || e.target.closest('#btn-open')) {
+      document.getElementById('file-input').click();
+    }
+  });
+
+  let _dragCounter = 0;
+
+  document.addEventListener('dragenter', e => {
     e.preventDefault();
-    dz.classList.add('drop-zone--active');
+    _dragCounter++;
+    const overlay = document.getElementById('drag-overlay');
+    if (overlay) overlay.hidden = false;
   });
 
   document.addEventListener('dragleave', e => {
-    const dz = document.getElementById('drop-zone');
-    if (!dz) return;
-    dz.classList.remove('drop-zone--active');
+    if (e.relatedTarget === null) {
+      _dragCounter = 0;
+      const overlay = document.getElementById('drag-overlay');
+      if (overlay) overlay.hidden = true;
+      return;
+    }
+    _dragCounter--;
+    if (_dragCounter <= 0) {
+      _dragCounter = 0;
+      const overlay = document.getElementById('drag-overlay');
+      if (overlay) overlay.hidden = true;
+    }
   });
+
+  document.addEventListener('dragover', e => { e.preventDefault(); });
 
   document.addEventListener('drop', e => {
     e.preventDefault();
-    const dz = document.getElementById('drop-zone');
-    if (dz) dz.classList.remove('drop-zone--active');
+    _dragCounter = 0;
+    const overlay = document.getElementById('drag-overlay');
+    if (overlay) overlay.hidden = true;
     const file = e.dataTransfer?.files[0];
     if (file && file.name.endsWith('.prj')) _loadFile(file);
   });
 }
 
 function _loadFile(file) {
+  const input = document.getElementById('file-input');
   const reader = new FileReader();
   reader.onload = e => {
+    if (input) input.value = '';
     _callbacks.onFileLoad(e.target.result, file.name);
   };
   reader.readAsArrayBuffer(file);
@@ -186,10 +216,12 @@ export function renderContacts(state) {
   const dropZone   = document.getElementById('drop-zone');
   const contactList = document.getElementById('contact-list');
   const btnSave    = document.getElementById('btn-save');
+  const btnOpen    = document.getElementById('btn-open');
 
   if (dropZone)    dropZone.hidden    = true;
   if (contactList) contactList.hidden = false;
   if (btnSave)     btnSave.disabled   = false;
+  if (btnOpen)     btnOpen.hidden     = false;
 
   if (!contactList) return;
 
@@ -198,6 +230,7 @@ export function renderContacts(state) {
       <p class="contact-list__empty" data-i18n="contacts.empty"></p>
     `;
     _applyI18n();
+    _syncPanel(state);
     return;
   }
 
@@ -218,7 +251,7 @@ export function renderContacts(state) {
             ${_esc(contact.surname)}, ${_esc(contact.name)}
           </span>
           <span class="contact-item__meta">
-            APT ${_esc(contact.apt)} &middot; SCS ${contact.scsAddr}
+            APT ${_esc(contact.apt)} &middot; SCS ${contact.scsAddr ?? ''}
           </span>
         </div>
         ${badgeCount > 0 ? `
@@ -234,14 +267,29 @@ export function renderContacts(state) {
     el.addEventListener('click', () => {
       _selectedMemberId = el.dataset.memberId;
       renderContacts(_currentState);
-      _renderBadgePanel(
-        document.getElementById('panel-right'),
-        _currentState
-      );
     });
   });
 
   _applyI18n();
+  _syncPanel(state);
+}
+
+function _syncPanel(state) {
+  const panel = document.getElementById('panel-right');
+  if (!panel) return;
+
+  if (_selectedMemberId && state.contacts.find(c => c.id === _selectedMemberId)) {
+    _renderBadgePanel(panel, state);
+  } else {
+    _selectedMemberId = null;
+    panel.innerHTML = `
+      <div class="panel__placeholder">
+        <span class="panel__placeholder-icon">🔑</span>
+        <p data-i18n="contacts.empty"></p>
+      </div>
+    `;
+    _applyI18n();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -268,7 +316,7 @@ function _renderBadgePanel(panel, state) {
             ${_esc(contact.surname)}, ${_esc(contact.name)}
           </span>
           <span class="badge-panel__meta">
-            APT ${_esc(contact.apt)} &middot; SCS ${contact.scsAddr}
+            APT ${_esc(contact.apt)} &middot; SCS ${contact.scsAddr ?? ''}
           </span>
         </div>
       </div>
@@ -397,7 +445,11 @@ function _bindBadgeFormEvents(panel) {
     const result = _callbacks.onAddBadge({ memberId, uid, type, note });
 
     if (!result.ok) {
-      _showFormError(form, result.field, result.error);
+      if (result.field === 'system') {
+        _showToast(t(result.error), 'toast--error');
+      } else {
+        _showFormError(form, result.field, result.error);
+      }
       return;
     }
 
@@ -413,8 +465,12 @@ function _bindRemoveEvents(panel) {
     if (!btn) return;
     const memberId = btn.dataset.memberId;
     const badgeId  = btn.dataset.badgeId;
-    _callbacks.onRemoveBadge({ memberId, badgeId });
-    showSuccess('success.badge.removed');
+    const result = _callbacks.onRemoveBadge({ memberId, badgeId });
+    if (result?.ok) {
+      showSuccess('success.badge.removed');
+    } else {
+      showSystemError('error.save');
+    }
   });
 }
 
@@ -470,6 +526,11 @@ function _showToast(message, modifier) {
 export function setLoading(active) {
   const el = document.getElementById('loading');
   if (el) el.hidden = !active;
+}
+
+export function setSaveEnabled(enabled) {
+  const btn = document.getElementById('btn-save');
+  if (btn) btn.disabled = !enabled;
 }
 
 // ---------------------------------------------------------------------------

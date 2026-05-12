@@ -23,6 +23,7 @@ const strings = {
     'file.or':                  'or',
     'file.browse':              'Browse file',
     'file.loaded':              'File loaded',
+    'file.open':                'Open .prj',
     'file.save':                'Save .prj',
 
     // Contacts
@@ -76,6 +77,7 @@ const strings = {
     'file.or':                  'o',
     'file.browse':              'Seleccionar fichero',
     'file.loaded':              'Fichero cargado',
+    'file.open':                'Abrir .prj',
     'file.save':                'Guardar .prj',
 
     // Contacts

@@ -70,37 +70,34 @@
     var _debug = document.getElementById('debug');
     var _status = document.getElementById('loading-status');
 
-    function _log(msg) {
+    function _err(msg) {
       _debug.style.display = 'block';
       _debug.innerHTML += msg + '<br>';
       _debug.scrollTop = _debug.scrollHeight;
       if (_status) _status.textContent = msg;
-      console.log('[FobForge]', msg);
+      console.error('[FobForge]', msg);
     }
 
     window.onerror = function(msg, src, line) {
-      _log('ERROR: ' + msg + ' (line ' + line + ')');
+      _err('ERROR: ' + msg + ' (line ' + line + ')');
     };
 
     window.onunhandledrejection = function(e) {
-      _log('PROMISE ERROR: ' + (e.reason && e.reason.message || e.reason));
+      _err('PROMISE ERROR: ' + (e.reason && e.reason.message || e.reason));
     };
 
     // Safety fallback — hide loading screen after 8 seconds no matter what
     setTimeout(function() {
       var s = document.getElementById('loading-screen');
       if (s) s.parentNode.removeChild(s);
-      _log('fallback: loading-screen removed');
     }, 8000);
-
-    _log('Loading sql.js...');
   </script>
 
   <!-- sql.js (pinned version — WebAssembly SQLite) -->
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"
-    onload="_log('sql.js loaded — starting app...')"
-    onerror="_log('ERROR: failed to load sql.js')">
+    onload="console.log('[FobForge] sql.js loaded')"
+    onerror="_err('ERROR: failed to load sql.js')">
   </script>
 
   <!-- Application entry point -->
@@ -122,20 +119,14 @@
 
     waitForSqlJs()
       .then(function() {
-        _log('sql.js ready — bootstrap...');
         return bootstrap();
       })
       .then(function() {
-        _log('ready');
         var s = document.getElementById('loading-screen');
-        _log('loading-screen found: ' + (s ? 'YES' : 'NO'));
-        if (s) {
-          s.parentNode.removeChild(s);
-          _log('loading-screen removed');
-        }
+        if (s) s.parentNode.removeChild(s);
       })
       .catch(function(e) {
-        _log('FATAL: ' + (e.message || e));
+        _err('FATAL: ' + (e.message || e));
         var s = document.getElementById('loading-screen');
         if (s) s.parentNode.removeChild(s);
       });

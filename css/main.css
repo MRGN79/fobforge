@@ -195,6 +195,10 @@ body {
   gap:             8px;
 }
 
+.drop-zone[hidden] {
+  display: none;
+}
+
 .drop-zone--active,
 .drop-zone:hover {
   border-color: var(--color-accent);
@@ -608,6 +612,29 @@ body {
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------------------------------------------------------------------
+   Drag overlay
+--------------------------------------------------------------------------- */
+
+.drag-overlay {
+  position:        fixed;
+  inset:           0;
+  background:      rgba(0, 212, 160, 0.06);
+  border:          2px dashed var(--color-accent);
+  z-index:         400;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-family:     var(--font-mono);
+  font-size:       14px;
+  color:           var(--color-accent);
+  pointer-events:  none;
+}
+
+.drag-overlay[hidden] {
+  display: none;
 }
 
 /* ---------------------------------------------------------------------------
