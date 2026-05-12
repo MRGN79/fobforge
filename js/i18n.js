@@ -13,6 +13,7 @@ const strings = {
     'app.title':                'FobForge',
     'app.subtitle':             'RFID Badge Manager for BTicino Sfera .prj files',
     'app.loading':              'Loading...',
+    'app.welcome':              'Open a .prj file to get started',
 
     // Language selector
     'lang.en':                  'English',
@@ -24,11 +25,13 @@ const strings = {
     'file.browse':              'Browse file',
     'file.loaded':              'File loaded',
     'file.open':                'Open .prj',
+    'file.close':               'Close',
     'file.save':                'Save .prj',
 
     // Contacts
     'contacts.title':           'Contacts',
     'contacts.empty':           'No contacts found in this project',
+    'contacts.select':          'Select a contact from the list',
     'contacts.badge_count':     'badges',
 
     // Badges
@@ -68,6 +71,7 @@ const strings = {
     'app.title':                'FobForge',
     'app.subtitle':             'Gestor de badges RFID para ficheros .prj de BTicino Sfera',
     'app.loading':              'Cargando...',
+    'app.welcome':              'Abre un fichero .prj para comenzar',
 
     // Language selector
     'lang.en':                  'Inglés',
@@ -79,11 +83,13 @@ const strings = {
     'file.browse':              'Seleccionar fichero',
     'file.loaded':              'Fichero cargado',
     'file.open':                'Abrir .prj',
+    'file.close':               'Cerrar',
     'file.save':                'Guardar .prj',
 
     // Contacts
     'contacts.title':           'Contactos',
     'contacts.empty':           'No se encontraron contactos en este proyecto',
+    'contacts.select':          'Selecciona un contacto de la lista',
     'contacts.badge_count':     'badges',
 
     // Badges

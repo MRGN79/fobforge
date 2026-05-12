@@ -14,7 +14,7 @@ import {
 } from './db.js';
 import {
   initUI, renderContacts, clearSelection,
-  showSuccess, showSystemError, setLoading, setSaveEnabled,
+  showSuccess, showSystemError, setLoading, setSaveEnabled, resetUI,
 } from './ui.js';
 
 // ---------------------------------------------------------------------------
@@ -54,6 +54,7 @@ export async function bootstrap() {
     onAddBadge:    handleAddBadge,
     onRemoveBadge: handleRemoveBadge,
     onSave:        handleSave,
+    onClose:       handleClose,
   });
 
   return true;
@@ -121,6 +122,19 @@ export function handleRemoveBadge({ memberId, badgeId }) {
   }
   _refreshState();
   return { ok: true };
+}
+
+export function handleClose() {
+  closeDb();
+  clearSelection();
+  state.loaded      = false;
+  state.fileName    = '';
+  state.contacts    = [];
+  state.badges      = [];
+  state.assignments = [];
+  state.rawXtz0     = null;
+  state.rawXtz1     = null;
+  resetUI();
 }
 
 export async function handleSave() {

@@ -14,6 +14,7 @@ let _callbacks = {
   onAddBadge:    null,
   onRemoveBadge: null,
   onSave:        null,
+  onClose:       null,
 };
 
 // Current selected contact ID
@@ -33,6 +34,7 @@ export function initUI(callbacks) {
   _bindFileEvents();
   _bindLangSelector();
   _bindSaveButton();
+  _bindCloseButton();
 }
 
 // ---------------------------------------------------------------------------
@@ -53,6 +55,8 @@ function _renderShell() {
         </select>
         <button id="btn-open" class="btn btn--secondary" hidden
                 data-i18n="file.open"></button>
+        <button id="btn-close" class="btn btn--secondary" hidden
+                data-i18n="file.close"></button>
         <button id="btn-save" class="btn btn--primary" disabled
                 data-i18n="file.save"></button>
       </div>
@@ -81,7 +85,7 @@ function _renderShell() {
       <section class="panel panel--right" id="panel-right">
         <div class="panel__placeholder">
           <span class="panel__placeholder-icon">🔑</span>
-          <p data-i18n="contacts.empty"></p>
+          <p data-i18n="app.welcome"></p>
         </div>
       </section>
 
@@ -204,6 +208,41 @@ function _bindSaveButton() {
   });
 }
 
+function _bindCloseButton() {
+  document.addEventListener('click', e => {
+    if (e.target.id === 'btn-close' || e.target.closest('#btn-close')) {
+      _callbacks.onClose();
+    }
+  });
+}
+
+export function resetUI() {
+  _currentState     = null;
+  _selectedMemberId = null;
+
+  const dropZone    = document.getElementById('drop-zone');
+  const contactList = document.getElementById('contact-list');
+  const btnSave     = document.getElementById('btn-save');
+  const btnOpen     = document.getElementById('btn-open');
+  const btnClose    = document.getElementById('btn-close');
+  const panel       = document.getElementById('panel-right');
+
+  if (dropZone)    { dropZone.hidden = false; }
+  if (contactList) { contactList.hidden = true; contactList.innerHTML = ''; }
+  if (btnSave)     { btnSave.disabled = true; }
+  if (btnOpen)     { btnOpen.hidden = true; }
+  if (btnClose)    { btnClose.hidden = true; }
+  if (panel) {
+    panel.innerHTML = `
+      <div class="panel__placeholder">
+        <span class="panel__placeholder-icon">🔑</span>
+        <p data-i18n="app.welcome"></p>
+      </div>
+    `;
+    _applyI18n();
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Contact list rendering
 // ---------------------------------------------------------------------------
@@ -217,11 +256,13 @@ export function renderContacts(state) {
   const contactList = document.getElementById('contact-list');
   const btnSave    = document.getElementById('btn-save');
   const btnOpen    = document.getElementById('btn-open');
+  const btnClose   = document.getElementById('btn-close');
 
   if (dropZone)    dropZone.hidden    = true;
   if (contactList) contactList.hidden = false;
   if (btnSave)     btnSave.disabled   = false;
   if (btnOpen)     btnOpen.hidden     = false;
+  if (btnClose)    btnClose.hidden    = false;
 
   if (!contactList) return;
 
@@ -285,7 +326,7 @@ function _syncPanel(state) {
     panel.innerHTML = `
       <div class="panel__placeholder">
         <span class="panel__placeholder-icon">🔑</span>
-        <p data-i18n="contacts.empty"></p>
+        <p data-i18n="contacts.select"></p>
       </div>
     `;
     _applyI18n();
