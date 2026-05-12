@@ -137,7 +137,7 @@ function _bindFileEvents() {
   document.addEventListener('change', e => {
     if (e.target.id !== 'file-input') return;
     const file = e.target.files[0];
-    if (file) _loadFile(file);
+    if (file && file.name.endsWith('.prj')) _loadFile(file);
   });
 
   document.addEventListener('click', e => {
@@ -429,8 +429,12 @@ function _bindBadgeFormEvents(panel) {
   const uidInput = form.querySelector('#badge-uid');
   uidInput.addEventListener('input', () => {
     const pos = uidInput.selectionStart;
-    uidInput.value = uidInput.value.toUpperCase().replace(/[^0-9A-F]/g, '');
-    uidInput.setSelectionRange(pos, pos);
+    const raw = uidInput.value;
+    const filtered = raw.toUpperCase().replace(/[^0-9A-F]/g, '');
+    const invalidBefore = raw.slice(0, pos).replace(/[0-9A-Fa-f]/g, '').length;
+    uidInput.value = filtered;
+    const newPos = Math.max(0, pos - invalidBefore);
+    uidInput.setSelectionRange(newPos, newPos);
   });
 
   form.addEventListener('submit', e => {
@@ -481,10 +485,10 @@ function _bindRemoveEvents(panel) {
 function _showFormError(form, field, message) {
   if (field === 'uid') {
     const el = form.querySelector('#error-uid');
-    if (el) { el.textContent = message; el.hidden = false; }
+    if (el) { el.textContent = t(message); el.hidden = false; }
   } else if (field === 'assign') {
     const el = form.querySelector('#error-assign');
-    if (el) { el.textContent = message; el.hidden = false; }
+    if (el) { el.textContent = t(message); el.hidden = false; }
   }
 }
 

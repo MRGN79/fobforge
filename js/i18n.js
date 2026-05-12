@@ -49,6 +49,7 @@ const strings = {
     'error.uid.chars':          'UID must contain only hexadecimal characters (0-9, A-F)',
     'error.uid.duplicate':      'This UID already exists in the project',
     'error.badge.assigned':     'This badge is already assigned to this contact',
+    'error.badge.taken':        'This badge is already assigned to another contact',
 
     // System errors
     'error.file.invalid':       'Invalid or unreadable .prj file',
@@ -103,6 +104,7 @@ const strings = {
     'error.uid.chars':          'El UID solo puede contener caracteres hexadecimales (0-9, A-F)',
     'error.uid.duplicate':      'Este UID ya existe en el proyecto',
     'error.badge.assigned':     'Este badge ya está asignado a este contacto',
+    'error.badge.taken':        'Este badge ya está asignado a otro contacto',
 
     // System errors
     'error.file.invalid':       'Fichero .prj inválido o ilegible',

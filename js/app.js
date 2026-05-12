@@ -14,7 +14,7 @@ import {
 } from './db.js';
 import {
   initUI, renderContacts, clearSelection,
-  showSuccess, setLoading, setSaveEnabled,
+  showSuccess, showSystemError, setLoading, setSaveEnabled,
 } from './ui.js';
 
 // ---------------------------------------------------------------------------

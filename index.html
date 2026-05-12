@@ -69,6 +69,7 @@
   <script>
     var _debug = document.getElementById('debug');
     var _status = document.getElementById('loading-status');
+    var _sqljsError = false;
 
     function _err(msg) {
       _debug.style.display = 'block';
@@ -97,7 +98,7 @@
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"
     onload="console.log('[FobForge] sql.js loaded')"
-    onerror="_err('ERROR: failed to load sql.js')">
+    onerror="_sqljsError = true; _err('ERROR: failed to load sql.js')">
   </script>
 
   <!-- Application entry point -->
@@ -105,10 +106,12 @@
     import { bootstrap } from './js/app.js';
 
     function waitForSqlJs() {
-      return new Promise(function(resolve) {
+      return new Promise(function(resolve, reject) {
         function check() {
           if (typeof initSqlJs === 'function') {
             resolve();
+          } else if (_sqljsError) {
+            reject(new Error('sql.js failed to load'));
           } else {
             setTimeout(check, 50);
           }

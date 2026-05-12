@@ -2,44 +2,49 @@
 // Centralized validation logic.
 // All validation goes through this module — never inline in ui.js or app.js.
 // Designed to be extended in future versions.
-
-import { t } from './i18n.js';
+// Returns i18n keys (not translated strings) so callers can re-translate on language change.
 
 // UID validation rules:
 // - Exactly 8 characters
 // - Hexadecimal only (0-9, A-F)
 // - Must not already exist in the project
 //
-// Returns: { valid: true } or { valid: false, error: 'message' }
+// Returns: { valid: true } or { valid: false, error: 'i18n-key' }
 
 export function validateUID(uid, existingBadges = []) {
   if (!uid || uid.length !== 8) {
-    return { valid: false, error: t('error.uid.length') };
+    return { valid: false, error: 'error.uid.length' };
   }
 
   if (!/^[0-9A-F]+$/.test(uid)) {
-    return { valid: false, error: t('error.uid.chars') };
+    return { valid: false, error: 'error.uid.chars' };
   }
 
   if (existingBadges.find(b => b.id === uid)) {
-    return { valid: false, error: t('error.uid.duplicate') };
+    return { valid: false, error: 'error.uid.duplicate' };
   }
 
   return { valid: true };
 }
 
 // Badge assignment validation:
-// - Badge must not already be assigned to the same contact
+// - Badge must not already be assigned to any contact
 //
-// Returns: { valid: true } or { valid: false, error: 'message' }
+// Returns: { valid: true } or { valid: false, error: 'i18n-key' }
 
 export function validateAssignment(memberId, badgeId, existingAssignments = []) {
-  const alreadyAssigned = existingAssignments.find(
+  const assignedToSelf = existingAssignments.find(
     a => a.memberId === memberId && a.badgeId === badgeId
   );
+  if (assignedToSelf) {
+    return { valid: false, error: 'error.badge.assigned' };
+  }
 
-  if (alreadyAssigned) {
-    return { valid: false, error: t('error.badge.assigned') };
+  const assignedToOther = existingAssignments.find(
+    a => a.badgeId === badgeId && a.memberId !== memberId
+  );
+  if (assignedToOther) {
+    return { valid: false, error: 'error.badge.taken' };
   }
 
   return { valid: true };
