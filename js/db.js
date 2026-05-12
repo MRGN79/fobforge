@@ -83,6 +83,9 @@ export function closeDb() {
   }
 }
 
+// Exposed for automated tests only — do not use in application code.
+export function _getDb() { return _db; }
+
 // ---------------------------------------------------------------------------
 // Read functions
 // ---------------------------------------------------------------------------

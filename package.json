@@ -1,0 +1,29 @@
+{
+  "name": "fobforge",
+  "version": "1.0.0",
+  "description": "> Web tool for managing RFID badges in BTicino TiSferaDesign `.prj` files.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRGN79/fobforge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/MRGN79/fobforge/issues"
+  },
+  "homepage": "https://github.com/MRGN79/fobforge#readme",
+  "devDependencies": {
+    "sql.js": "1.10.3",
+    "vitest": "^4.1.6"
+  }
+}

@@ -70,7 +70,7 @@ function _keyByte(keys) {
   return (Math.imul(temp, temp ^ 1) >>> 8) & 0xff;
 }
 
-function zipcryptoDecrypt(encData, password) {
+export function zipcryptoDecrypt(encData, password) {
   const keys = initKeys(password);
   // Decrypt and discard the 12-byte encryption header
   for (let i = 0; i < 12; i++) {
@@ -87,7 +87,7 @@ function zipcryptoDecrypt(encData, password) {
   return out;
 }
 
-function zipcryptoEncrypt(plainData, password, crc32val) {
+export function zipcryptoEncrypt(plainData, password, crc32val) {
   const keys = initKeys(password);
   // Build 12-byte encryption header
   // First 11 bytes: random. Last byte: high byte of CRC32.
@@ -190,7 +190,7 @@ function readUint32(buf, offset) {
           (buf[offset+2]<<16) | (buf[offset+3]<<24)) >>> 0;
 }
 
-function parseZipEntries(buf) {
+export function parseZipEntries(buf) {
   const entries = [];
   let offset = 0;
 
