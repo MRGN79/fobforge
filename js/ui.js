@@ -15,6 +15,7 @@ let _callbacks = {
   onRemoveBadge: null,
   onSave:        null,
   onClose:       null,
+  onNew:         null,
 };
 
 // Current selected contact ID
@@ -35,6 +36,7 @@ export function initUI(callbacks) {
   _bindLangSelector();
   _bindSaveButton();
   _bindCloseButton();
+  _bindNewButton();
 }
 
 // ---------------------------------------------------------------------------
@@ -77,6 +79,8 @@ function _renderShell() {
             <span data-i18n="file.browse"></span>
             <input type="file" id="file-input" accept=".prj" hidden>
           </label>
+          <button id="btn-new" class="btn btn--sm drop-zone__new"
+                  data-i18n="file.new"></button>
         </div>
 
         <div id="contact-list" class="contact-list" hidden></div>
@@ -212,6 +216,14 @@ function _bindCloseButton() {
   document.addEventListener('click', e => {
     if (e.target.id === 'btn-close' || e.target.closest('#btn-close')) {
       _callbacks.onClose();
+    }
+  });
+}
+
+function _bindNewButton() {
+  document.addEventListener('click', e => {
+    if (e.target.id === 'btn-new' || e.target.closest('#btn-new')) {
+      _callbacks.onNew();
     }
   });
 }

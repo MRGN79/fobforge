@@ -18,6 +18,44 @@ export function initDb(sqljs) {
   _SQL = sqljs;
 }
 
+// Create a new empty database with the required schema.
+// Returns nothing — call getContacts(), getBadges(), getAssignments() after.
+
+export function createEmptyDb() {
+  if (!_SQL) throw new Error('SQL engine not initialized');
+  if (_db) { _db.close(); _db = null; }
+
+  _db = new _SQL.Database();
+  _db.run(`
+    CREATE TABLE MEMBER (
+      ID_MEMBER TEXT PRIMARY KEY NOT NULL,
+      Name      TEXT NOT NULL DEFAULT '',
+      Surname   TEXT NOT NULL DEFAULT ''
+    );
+    CREATE TABLE APT (
+      ID_APT   TEXT PRIMARY KEY NOT NULL,
+      Apt      TEXT    DEFAULT '',
+      SCS_addr INTEGER DEFAULT 0,
+      Block    TEXT    DEFAULT '',
+      Floor    TEXT    DEFAULT ''
+    );
+    CREATE TABLE MEMBER_APT (
+      ID_MEMBER TEXT NOT NULL,
+      ID_APT    TEXT NOT NULL
+    );
+    CREATE TABLE BADGE (
+      ID_BADGE   TEXT    PRIMARY KEY NOT NULL,
+      BADGE_TYPE INTEGER NOT NULL DEFAULT 0,
+      Note       TEXT    DEFAULT ''
+    );
+    CREATE TABLE MEMBER_BADGE (
+      ID_MEMBER TEXT NOT NULL,
+      ID_BADGE  TEXT NOT NULL,
+      PRIMARY KEY (ID_MEMBER, ID_BADGE)
+    );
+  `);
+}
+
 // Load raw SQLite bytes into memory.
 // Returns nothing — call getContacts(), getBadges(), getAssignments() after.
 

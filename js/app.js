@@ -8,7 +8,7 @@ import { initI18n }                        from './i18n.js';
 import { validateUID, validateAssignment } from './validate.js';
 import { readPrj, writePrj }               from './prj.js';
 import {
-  initDb, loadDb, exportDb, closeDb,
+  initDb, loadDb, createEmptyDb, exportDb, closeDb,
   getContacts, getBadges, getAssignments,
   addBadge, assignBadge, removeBadge,
 } from './db.js';
@@ -55,6 +55,7 @@ export async function bootstrap() {
     onRemoveBadge: handleRemoveBadge,
     onSave:        handleSave,
     onClose:       handleClose,
+    onNew:         handleNew,
   });
 
   return true;
@@ -63,6 +64,25 @@ export async function bootstrap() {
 // ---------------------------------------------------------------------------
 // Handlers
 // ---------------------------------------------------------------------------
+
+export function handleNew() {
+  closeDb();
+  clearSelection();
+
+  try {
+    createEmptyDb();
+  } catch (e) {
+    console.error(e);
+    showSystemError('error.sqljsload');
+    return;
+  }
+
+  state.loaded      = true;
+  state.fileName    = 'new_project.prj';
+  state.rawXtz0     = null;
+  state.rawXtz1     = null;
+  _refreshState();
+}
 
 export async function handleFileLoad(arrayBuffer, fileName) {
   setLoading(true);

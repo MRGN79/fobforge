@@ -219,6 +219,19 @@ body {
   color:     var(--color-muted);
 }
 
+.drop-zone__new {
+  margin-top:  4px;
+  color:       var(--color-muted);
+  border-color: transparent;
+  background:  transparent;
+  font-size:   11px;
+}
+
+.drop-zone__new:hover {
+  color:        var(--color-accent);
+  border-color: transparent;
+}
+
 /* ---------------------------------------------------------------------------
    Contact list
 --------------------------------------------------------------------------- */
