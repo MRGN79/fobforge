@@ -22,8 +22,17 @@ let _callbacks = {
 // Current selected contact ID
 let _selectedMemberId = null;
 
+// Tracks unsaved changes — set externally via setDirty()
+let _isDirty = false;
+
 export function clearSelection() {
   _selectedMemberId = null;
+}
+
+export function setDirty(dirty) {
+  _isDirty = dirty;
+  const btn = document.getElementById('btn-save');
+  if (btn) btn.classList.toggle('btn--dirty', dirty);
 }
 
 // ---------------------------------------------------------------------------
@@ -38,6 +47,7 @@ export function initUI(callbacks) {
   _bindSaveButton();
   _bindCloseButton();
   _bindNewButton();
+  _bindRemoveButton();
 }
 
 // ---------------------------------------------------------------------------
@@ -192,12 +202,22 @@ function _bindFileEvents() {
   });
 }
 
+const FILE_SIZE_LIMIT = 20 * 1024 * 1024; // 20 MB
+
 function _loadFile(file) {
+  if (file.size > FILE_SIZE_LIMIT) {
+    showSystemError('error.file.toobig');
+    return;
+  }
   const input = document.getElementById('file-input');
   const reader = new FileReader();
   reader.onload = e => {
     if (input) input.value = '';
     _callbacks.onFileLoad(e.target.result, file.name);
+  };
+  reader.onerror = () => {
+    if (input) input.value = '';
+    showSystemError('error.file.load');
   };
   reader.readAsArrayBuffer(file);
 }
@@ -217,6 +237,7 @@ function _bindSaveButton() {
 function _bindCloseButton() {
   document.addEventListener('click', e => {
     if (e.target.id === 'btn-close' || e.target.closest('#btn-close')) {
+      if (_isDirty && !window.confirm(t('confirm.close'))) return;
       _callbacks.onClose();
     }
   });
@@ -230,9 +251,25 @@ function _bindNewButton() {
   });
 }
 
+function _bindRemoveButton() {
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="remove"]');
+    if (!btn) return;
+    const memberId = btn.dataset.memberId;
+    const badgeId  = btn.dataset.badgeId;
+    const result   = _callbacks.onRemoveBadge({ memberId, badgeId });
+    if (result?.ok) {
+      showSuccess('success.badge.removed');
+    } else {
+      showSystemError('error.save');
+    }
+  });
+}
+
 export function resetUI() {
   _currentState     = null;
   _selectedMemberId = null;
+  setDirty(false);
 
   const dropZone    = document.getElementById('drop-zone');
   const contactList = document.getElementById('contact-list');
@@ -299,15 +336,16 @@ export function renderContacts(state) {
 
     return `
       <div class="contact-item ${isSelected ? 'contact-item--active' : ''}"
-           data-member-id="${contact.id}">
+           data-member-id="${contact.id}"
+           tabindex="0"
+           role="button"
+           aria-pressed="${isSelected}">
         <div class="contact-item__avatar">${initials}</div>
         <div class="contact-item__info">
           <span class="contact-item__name">
             ${_esc(contact.surname)}, ${_esc(contact.name)}
           </span>
-          <span class="contact-item__meta">
-            APT ${_esc(contact.apt)} &middot; SCS ${contact.scsAddr ?? ''}
-          </span>
+          <span class="contact-item__meta">${_aptMeta(contact.apts)}</span>
         </div>
         ${badgeCount > 0 ? `
           <span class="badge-count">
@@ -317,11 +355,15 @@ export function renderContacts(state) {
     `;
   }).join('');
 
-  // Bind contact click events
+  // Bind contact click and keyboard events
   contactList.querySelectorAll('.contact-item').forEach(el => {
-    el.addEventListener('click', () => {
+    const select = () => {
       _selectedMemberId = el.dataset.memberId;
       renderContacts(_currentState);
+    };
+    el.addEventListener('click', select);
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
     });
   });
 
@@ -370,9 +412,7 @@ function _renderBadgePanel(panel, state) {
           <span class="badge-panel__name">
             ${_esc(contact.surname)}, ${_esc(contact.name)}
           </span>
-          <span class="badge-panel__meta">
-            APT ${_esc(contact.apt)} &middot; SCS ${contact.scsAddr ?? ''}
-          </span>
+          <span class="badge-panel__meta">${_aptMeta(contact.apts)}</span>
         </div>
       </div>
 
@@ -469,7 +509,6 @@ function _renderBadgePanel(panel, state) {
 
   _applyI18n();
   _bindBadgeFormEvents(panel);
-  _bindRemoveEvents(panel);
 }
 
 // ---------------------------------------------------------------------------
@@ -513,23 +552,6 @@ function _bindBadgeFormEvents(panel) {
     }
 
     showSuccess('success.badge.added');
-    form.querySelector('[name="uid"]').value  = '';
-    form.querySelector('[name="note"]').value = '';
-  });
-}
-
-function _bindRemoveEvents(panel) {
-  panel.addEventListener('click', e => {
-    const btn = e.target.closest('[data-action="remove"]');
-    if (!btn) return;
-    const memberId = btn.dataset.memberId;
-    const badgeId  = btn.dataset.badgeId;
-    const result = _callbacks.onRemoveBadge({ memberId, badgeId });
-    if (result?.ok) {
-      showSuccess('success.badge.removed');
-    } else {
-      showSystemError('error.save');
-    }
   });
 }
 
@@ -595,6 +617,16 @@ export function setSaveEnabled(enabled) {
 // ---------------------------------------------------------------------------
 // Utilities
 // ---------------------------------------------------------------------------
+
+function _aptMeta(apts) {
+  if (!apts || !apts.length) return '';
+  const aptStr = apts.map(a => _esc(a.apt ?? '')).filter(Boolean).join(', ');
+  const scsStr = apts.map(a => a.scsAddr ?? '').filter(v => v !== '' && v != null).join(', ');
+  const parts = [];
+  if (aptStr) parts.push(`APT ${aptStr}`);
+  if (scsStr) parts.push(`SCS ${scsStr}`);
+  return parts.join(' &middot; ');
+}
 
 function _initials(name, surname) {
   const a = (name    || '?')[0].toUpperCase();

@@ -58,8 +58,12 @@ const strings = {
     // System errors
     'error.file.invalid':       'Invalid or unreadable .prj file',
     'error.file.load':          'Error loading file',
+    'error.file.toobig':        'File too large (max 20 MB)',
     'error.save':               'Error saving file',
     'error.sqljsload':          'Error loading SQL engine. Check your connection and reload.',
+
+    // Confirmations
+    'confirm.close':            'You have unsaved changes. Close anyway?',
 
     // Success messages
     'success.badge.added':      'Badge added successfully',
@@ -117,8 +121,12 @@ const strings = {
     // System errors
     'error.file.invalid':       'Fichero .prj inválido o ilegible',
     'error.file.load':          'Error al cargar el fichero',
+    'error.file.toobig':        'Fichero demasiado grande (máx. 20 MB)',
     'error.save':               'Error al guardar el fichero',
     'error.sqljsload':          'Error al cargar el motor SQL. Comprueba tu conexión y recarga.',
+
+    // Confirmations
+    'confirm.close':            '¿Tienes cambios sin guardar. ¿Cerrar igualmente?',
 
     // Success messages
     'success.badge.added':      'Badge añadido correctamente',

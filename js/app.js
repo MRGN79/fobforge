@@ -14,7 +14,7 @@ import {
 } from './db.js';
 import {
   initUI, renderContacts, clearSelection,
-  showSuccess, showSystemError, setLoading, setSaveEnabled, resetUI,
+  showSuccess, showSystemError, setLoading, setSaveEnabled, setDirty, resetUI,
 } from './ui.js';
 
 // ---------------------------------------------------------------------------
@@ -23,6 +23,7 @@ import {
 
 const state = {
   loaded:      false,
+  dirty:       false,
   fileName:    '',
   contacts:    [],
   badges:      [],
@@ -48,6 +49,13 @@ export async function bootstrap() {
     showSystemError('error.sqljsload');
     return;
   }
+
+  window.addEventListener('beforeunload', e => {
+    if (state.loaded && state.dirty) {
+      e.preventDefault();
+      return '';
+    }
+  });
 
   initUI({
     onFileLoad:    handleFileLoad,
@@ -78,9 +86,11 @@ export function handleNew() {
   }
 
   state.loaded      = true;
+  state.dirty       = false;
   state.fileName    = 'new_project.prj';
   state.rawXtz0     = null;
   state.rawXtz1     = null;
+  setDirty(false);
   _refreshState();
 }
 
@@ -94,10 +104,12 @@ export async function handleFileLoad(arrayBuffer, fileName) {
     loadDb(dbBytes);
 
     state.loaded   = true;
-    state.fileName = fileName;
+    state.dirty    = false;
+    state.fileName = fileName || 'untitled.prj';
     state.rawXtz0  = rawXtz0;
     state.rawXtz1  = rawXtz1;
 
+    setDirty(false);
     _refreshState();
 
   } catch (e) {
@@ -129,6 +141,8 @@ export function handleAddBadge({ memberId, uid, type, note }) {
     return { ok: false, field: 'system', error: 'error.save' };
   }
 
+  state.dirty = true;
+  setDirty(true);
   _refreshState();
   return { ok: true };
 }
@@ -140,6 +154,8 @@ export function handleRemoveBadge({ memberId, badgeId }) {
     console.error(e);
     return { ok: false };
   }
+  state.dirty = true;
+  setDirty(true);
   _refreshState();
   return { ok: true };
 }
@@ -148,6 +164,7 @@ export function handleClose() {
   closeDb();
   clearSelection();
   state.loaded      = false;
+  state.dirty       = false;
   state.fileName    = '';
   state.contacts    = [];
   state.badges      = [];
@@ -171,6 +188,8 @@ export async function handleSave() {
     });
 
     _downloadFile(prjBytes, state.fileName);
+    state.dirty = false;
+    setDirty(false);
     showSuccess('success.file.saved');
 
   } catch (e) {

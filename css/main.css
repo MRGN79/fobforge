@@ -279,6 +279,11 @@ body {
   background: var(--color-surface-2);
 }
 
+.contact-item:focus-visible {
+  outline:        2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
 .contact-item--active {
   border-left-color: var(--color-accent);
   background:        rgba(0, 212, 160, 0.06);
@@ -566,6 +571,17 @@ body {
 .btn:disabled:hover {
   border-color: var(--color-border);
   color:        var(--color-text);
+}
+
+.btn--dirty::after {
+  content:        '';
+  display:        inline-block;
+  width:          6px;
+  height:         6px;
+  border-radius:  50%;
+  background:     var(--color-accent);
+  margin-left:    6px;
+  vertical-align: middle;
 }
 
 .btn--primary {

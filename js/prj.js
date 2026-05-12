@@ -239,6 +239,11 @@ async function readEntry(entry, password) {
   if (entry.method === 8) {
     data = await inflate(data);
   }
+  // Validate CRC32 unless a data descriptor holds the real value (flag bit 3)
+  const hasDataDescriptor = !!(entry.flags & 0x08);
+  if (!hasDataDescriptor && entry.crc !== 0 && crc32(data) !== entry.crc) {
+    throw new Error(`CRC32 mismatch for "${entry.fname}" — file may be corrupt`);
+  }
   return data;
 }
 

@@ -89,43 +89,53 @@ export function closeDb() {
 
 // Returns array of contact objects:
 // {
-//   id:       string (GUID),
-//   name:     string,
-//   surname:  string,
-//   apt:      string,
-//   scsAddr:  number,
-//   block:    string,
-//   floor:    string,
+//   id:      string (GUID),
+//   name:    string,
+//   surname: string,
+//   apts:    [{ apt, scsAddr, block, floor }, ...]  — all apartments for this member
 // }
 
 export function getContacts() {
   if (!_db) return [];
 
-  const sql = `
-    SELECT
-      m.ID_MEMBER  AS id,
-      m.Name       AS name,
-      m.Surname    AS surname,
-      a.Apt        AS apt,
-      a.SCS_addr   AS scsAddr,
-      a.Block      AS block,
-      a.Floor      AS floor
-    FROM MEMBER m
-    LEFT JOIN MEMBER_APT ma ON ma.ID_MEMBER = m.ID_MEMBER
-    LEFT JOIN APT a         ON a.ID_APT     = ma.ID_APT
-    GROUP BY m.ID_MEMBER
-    ORDER BY m.Surname, m.Name
-  `;
+  const memberResult = _db.exec(`
+    SELECT ID_MEMBER AS id, Name AS name, Surname AS surname
+    FROM MEMBER
+    ORDER BY Surname, Name
+  `);
+  if (!memberResult.length) return [];
 
-  const result = _db.exec(sql);
-  if (!result.length) return [];
-
-  const { columns, values } = result[0];
-  return values.map(row => {
-    const obj = {};
-    columns.forEach((col, i) => { obj[col] = row[i]; });
+  const { columns: mc, values: mv } = memberResult[0];
+  const contacts = mv.map(row => {
+    const obj = { apts: [] };
+    mc.forEach((col, i) => { obj[col] = row[i]; });
     return obj;
   });
+
+  const aptResult = _db.exec(`
+    SELECT ma.ID_MEMBER AS memberId,
+           a.Apt        AS apt,
+           a.SCS_addr   AS scsAddr,
+           a.Block      AS block,
+           a.Floor      AS floor
+    FROM MEMBER_APT ma
+    JOIN APT a ON a.ID_APT = ma.ID_APT
+  `);
+
+  if (aptResult.length) {
+    const { columns: ac, values: av } = aptResult[0];
+    const aptMap = {};
+    av.forEach(row => {
+      const apt = {};
+      ac.forEach((col, i) => { apt[col] = row[i]; });
+      const { memberId, ...aptData } = apt;
+      if (!aptMap[memberId]) aptMap[memberId] = [];
+      aptMap[memberId].push(aptData);
+    });
+    contacts.forEach(c => { c.apts = aptMap[c.id] ?? []; });
+  }
+
+  return contacts;
 }
 
 // Returns array of badge objects:
