@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/MRGN79/fobforge#readme",
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.6",
     "sql.js": "1.10.3",
     "vitest": "^4.1.6"
   }
