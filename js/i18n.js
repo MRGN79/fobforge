@@ -23,7 +23,6 @@ const strings = {
     'file.drop':                'Drop a .prj file here',
     'file.or':                  'or',
     'file.browse':              'Browse file',
-    'file.loaded':              'File loaded',
     'file.new':                 'New empty project',
     'file.open':                'Open .prj',
     'file.close':               'Close',
@@ -44,7 +43,6 @@ const strings = {
     'badges.type':              'Type',
     'badges.note':              'Note (optional)',
     'badges.add':               'Add badge',
-    'badges.assign':            'Assign to contact',
     'badges.remove':            'Remove',
     'badges.type.0':            'Resident',
     'badges.type.1':            'Passepartout',
@@ -92,7 +90,6 @@ const strings = {
     'apartments.title':         'Apartments',
     'apartments.empty':         'No apartments assigned',
     'apartments.add':           'Add apartment',
-    'apartments.edit':          'Edit apartment',
     'apartments.apt':           'Apartment',
     'apartments.scsaddr':       'SCS Address',
     'apartments.block':         'Block',
@@ -119,7 +116,6 @@ const strings = {
     'file.drop':                'Arrastra un fichero .prj aquí',
     'file.or':                  'o',
     'file.browse':              'Seleccionar fichero',
-    'file.loaded':              'Fichero cargado',
     'file.new':                 'Nuevo proyecto vacío',
     'file.open':                'Abrir .prj',
     'file.close':               'Cerrar',
@@ -140,7 +136,6 @@ const strings = {
     'badges.type':              'Tipo',
     'badges.note':              'Nota (opcional)',
     'badges.add':               'Añadir badge',
-    'badges.assign':            'Asignar a contacto',
     'badges.remove':            'Eliminar',
     'badges.type.0':            'Residente',
     'badges.type.1':            'Passepartout',
@@ -161,7 +156,7 @@ const strings = {
     'error.sqljsload':          'Error al cargar el motor SQL. Comprueba tu conexión y recarga.',
 
     // Confirmations
-    'confirm.close':            '¿Tienes cambios sin guardar. ¿Cerrar igualmente?',
+    'confirm.close':            'Tienes cambios sin guardar. ¿Cerrar igualmente?',
 
     // Success messages
     'success.badge.added':      'Badge añadido correctamente',
@@ -188,7 +183,6 @@ const strings = {
     'apartments.title':         'Apartamentos',
     'apartments.empty':         'Sin apartamentos asignados',
     'apartments.add':           'Añadir apartamento',
-    'apartments.edit':          'Editar apartamento',
     'apartments.apt':           'Apartamento',
     'apartments.scsaddr':       'Dirección SCS',
     'apartments.block':         'Bloque',

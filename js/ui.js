@@ -302,6 +302,7 @@ function _bindCloseButton() {
 function _bindNewButton() {
   document.addEventListener('click', e => {
     if (e.target.id === 'btn-new' || e.target.closest('#btn-new')) {
+      if (_isDirty && !window.confirm(t('confirm.close'))) return;
       _callbacks.onNew();
     }
   });

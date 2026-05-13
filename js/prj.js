@@ -227,6 +227,7 @@ function readUint32(buf, offset) {
 
 export function parseZipEntries(buf) {
   const entries = [];
+  const decoder = new TextDecoder();
   let offset = 0;
 
   while (offset < buf.length - 4) {
@@ -244,7 +245,7 @@ export function parseZipEntries(buf) {
     const uncompSize = readUint32(buf, idx + 22);
     const fnLen      = readUint16(buf, idx + 26);
     const extraLen   = readUint16(buf, idx + 28);
-    const fname      = new TextDecoder().decode(buf.slice(idx+30, idx+30+fnLen));
+    const fname      = decoder.decode(buf.slice(idx+30, idx+30+fnLen));
     const dataStart  = idx + 30 + fnLen + extraLen;
     const encrypted  = !!(flags & 1);
 

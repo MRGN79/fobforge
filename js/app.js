@@ -12,7 +12,7 @@ import {
   getContacts, getBadges, getAssignments,
   addBadge, assignBadge, removeBadge,
   addContact, editContact, deleteContact,
-  addApartment, assignApartment, editApartment, removeApartment,
+  addApartment, assignApartment, removeApartment,
 } from './db.js';
 import {
   initUI, renderContacts, clearSelection, clearSearch,
@@ -39,11 +39,7 @@ const state = {
 // ---------------------------------------------------------------------------
 
 function _generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  return crypto.randomUUID();
 }
 
 // ---------------------------------------------------------------------------
@@ -273,30 +269,6 @@ export function handleAddApartment({ memberId, apt, scsAddr, block, floor }) {
     const aptId = _generateUUID();
     addApartment(aptId, apt, scsAddr === '' ? null : scsAddr, block, floor);
     assignApartment(memberId, aptId);
-  } catch (e) {
-    console.error(e);
-    return { ok: false, field: 'system', error: 'error.save' };
-  }
-
-  state.dirty = true;
-  setDirty(true);
-  _refreshState();
-  return { ok: true };
-}
-
-export function handleEditApartment({ aptId, apt, scsAddr, block, floor }) {
-  apt = (apt ?? '').trim();
-  scsAddr = scsAddr ? parseInt(scsAddr, 10) : '';
-  block = (block ?? '').trim();
-  floor = (floor ?? '').trim();
-
-  const scsResult = validateApartmentScsAddr(scsAddr);
-  if (!scsResult.valid) {
-    return { ok: false, field: 'scsaddr', error: scsResult.error };
-  }
-
-  try {
-    editApartment(aptId, apt, scsAddr === '' ? null : scsAddr, block, floor);
   } catch (e) {
     console.error(e);
     return { ok: false, field: 'system', error: 'error.save' };
