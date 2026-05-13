@@ -49,3 +49,30 @@ export function validateAssignment(memberId, badgeId, existingAssignments = []) 
 
   return { valid: true };
 }
+
+// Contact validation
+
+export function validateMemberName(name) {
+  if (!name || name.trim().length === 0) {
+    return { valid: false, error: 'error.member.name.required' };
+  }
+  return { valid: true };
+}
+
+export function validateMemberSurname(surname) {
+  if (!surname || surname.trim().length === 0) {
+    return { valid: false, error: 'error.member.surname.required' };
+  }
+  return { valid: true };
+}
+
+// Apartment validation (most fields optional, only validate SCS address format if provided)
+
+export function validateApartmentScsAddr(scsAddr) {
+  if (scsAddr !== undefined && scsAddr !== null && scsAddr !== '') {
+    if (isNaN(scsAddr)) {
+      return { valid: false, error: 'error.apartment.scsaddr.numeric' };
+    }
+  }
+  return { valid: true };
+}

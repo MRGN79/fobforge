@@ -11,12 +11,17 @@ import { VERSION } from './version.js';
 // ---------------------------------------------------------------------------
 
 let _callbacks = {
-  onFileLoad:    null,
-  onAddBadge:    null,
-  onRemoveBadge: null,
-  onSave:        null,
-  onClose:       null,
-  onNew:         null,
+  onFileLoad:        null,
+  onAddBadge:        null,
+  onRemoveBadge:     null,
+  onSave:            null,
+  onClose:           null,
+  onNew:             null,
+  onAddContact:      null,
+  onEditContact:     null,
+  onDeleteContact:   null,
+  onAddApartment:    null,
+  onRemoveApartment: null,
 };
 
 // Current selected contact ID
@@ -57,7 +62,9 @@ export function initUI(callbacks) {
   _bindCloseButton();
   _bindNewButton();
   _bindRemoveButton();
+  _bindApartmentRemoveButton();
   _bindSearchInput();
+  _bindAddContactButton();
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +98,8 @@ function _renderShell() {
       <section class="panel panel--left">
         <div class="panel__header">
           <span class="panel__title" data-i18n="contacts.title"></span>
+          <button id="btn-add-contact" class="btn btn--sm" hidden
+                  data-i18n="contacts.add"></button>
         </div>
 
         <div id="search-bar" class="search-bar" hidden>
@@ -99,6 +108,31 @@ function _renderShell() {
                  class="search-input"
                  data-i18n-placeholder="contacts.search"
                  autocomplete="off">
+        </div>
+
+        <div id="add-contact-wrap" class="add-contact-wrap" hidden>
+          <form id="add-contact-form" class="add-contact-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="new-contact-name"
+                     data-i18n="contacts.name"></label>
+              <input class="form-input" type="text" id="new-contact-name"
+                     name="name" autocomplete="off">
+              <span class="form-error" id="error-new-name" hidden></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-contact-surname"
+                     data-i18n="contacts.surname"></label>
+              <input class="form-input" type="text" id="new-contact-surname"
+                     name="surname" autocomplete="off">
+              <span class="form-error" id="error-new-surname" hidden></span>
+            </div>
+            <div class="form-group form-group--actions">
+              <button type="submit" class="btn btn--primary btn--sm"
+                      data-i18n="contacts.add"></button>
+              <button type="button" id="btn-cancel-add-contact"
+                      class="btn btn--sm" data-i18n="action.cancel"></button>
+            </div>
+          </form>
         </div>
 
         <div id="drop-zone" class="drop-zone">
@@ -301,20 +335,24 @@ export function resetUI() {
   setDirty(false);
   clearSearch();
 
-  const dropZone    = document.getElementById('drop-zone');
-  const searchBar   = document.getElementById('search-bar');
-  const contactList = document.getElementById('contact-list');
-  const btnSave     = document.getElementById('btn-save');
-  const btnOpen     = document.getElementById('btn-open');
-  const btnClose    = document.getElementById('btn-close');
-  const panel       = document.getElementById('panel-right');
+  const dropZone       = document.getElementById('drop-zone');
+  const searchBar      = document.getElementById('search-bar');
+  const contactList    = document.getElementById('contact-list');
+  const btnSave        = document.getElementById('btn-save');
+  const btnOpen        = document.getElementById('btn-open');
+  const btnClose       = document.getElementById('btn-close');
+  const btnAddContact  = document.getElementById('btn-add-contact');
+  const addContactWrap = document.getElementById('add-contact-wrap');
+  const panel          = document.getElementById('panel-right');
 
-  if (dropZone)    { dropZone.hidden = false; }
-  if (searchBar)   { searchBar.hidden = true; }
-  if (contactList) { contactList.hidden = true; contactList.innerHTML = ''; }
-  if (btnSave)     { btnSave.disabled = true; }
-  if (btnOpen)     { btnOpen.hidden = true; }
-  if (btnClose)    { btnClose.hidden = true; }
+  if (dropZone)       { dropZone.hidden = false; }
+  if (searchBar)      { searchBar.hidden = true; }
+  if (contactList)    { contactList.hidden = true; contactList.innerHTML = ''; }
+  if (btnSave)        { btnSave.disabled = true; }
+  if (btnOpen)        { btnOpen.hidden = true; }
+  if (btnClose)       { btnClose.hidden = true; }
+  if (btnAddContact)  { btnAddContact.hidden = true; }
+  if (addContactWrap) { addContactWrap.hidden = true; }
   if (panel) {
     panel.innerHTML = `
       <div class="panel__placeholder">
@@ -335,19 +373,21 @@ let _currentState = null;
 export function renderContacts(state) {
   _currentState = state;
 
-  const dropZone    = document.getElementById('drop-zone');
-  const contactList = document.getElementById('contact-list');
-  const searchBar   = document.getElementById('search-bar');
-  const btnSave     = document.getElementById('btn-save');
-  const btnOpen     = document.getElementById('btn-open');
-  const btnClose    = document.getElementById('btn-close');
+  const dropZone      = document.getElementById('drop-zone');
+  const contactList   = document.getElementById('contact-list');
+  const searchBar     = document.getElementById('search-bar');
+  const btnSave       = document.getElementById('btn-save');
+  const btnOpen       = document.getElementById('btn-open');
+  const btnClose      = document.getElementById('btn-close');
+  const btnAddContact = document.getElementById('btn-add-contact');
 
-  if (dropZone)    dropZone.hidden    = true;
-  if (searchBar)   searchBar.hidden   = false;
-  if (contactList) contactList.hidden = false;
-  if (btnSave)     btnSave.disabled   = false;
-  if (btnOpen)     btnOpen.hidden     = false;
-  if (btnClose)    btnClose.hidden    = false;
+  if (dropZone)      dropZone.hidden      = true;
+  if (searchBar)     searchBar.hidden     = false;
+  if (contactList)   contactList.hidden   = false;
+  if (btnSave)       btnSave.disabled     = false;
+  if (btnOpen)       btnOpen.hidden       = false;
+  if (btnClose)      btnClose.hidden      = false;
+  if (btnAddContact) btnAddContact.hidden = false;
 
   if (!contactList) return;
 
@@ -465,6 +505,110 @@ function _renderBadgePanel(panel, state) {
           </span>
           <span class="badge-panel__meta">${_aptMeta(contact.apts)}</span>
         </div>
+        <div class="badge-panel__actions">
+          <button class="btn btn--sm" id="btn-edit-contact"
+                  data-i18n="contacts.edit"></button>
+          <button class="btn btn--sm btn--danger" id="btn-delete-contact"
+                  data-member-id="${_selectedMemberId}"
+                  data-i18n="contacts.delete"></button>
+        </div>
+      </div>
+
+      <div id="edit-contact-wrap" class="edit-contact-wrap" hidden>
+        <form id="edit-contact-form" class="edit-contact-form" novalidate>
+          <input type="hidden" name="memberId" value="${_selectedMemberId}">
+          <div class="form-group">
+            <label class="form-label" for="edit-contact-name"
+                   data-i18n="contacts.name"></label>
+            <input class="form-input" type="text" id="edit-contact-name"
+                   name="name" value="${_esc(contact.name)}" autocomplete="off">
+            <span class="form-error" id="error-edit-name" hidden></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-contact-surname"
+                   data-i18n="contacts.surname"></label>
+            <input class="form-input" type="text" id="edit-contact-surname"
+                   name="surname" value="${_esc(contact.surname)}" autocomplete="off">
+            <span class="form-error" id="error-edit-surname" hidden></span>
+          </div>
+          <div class="form-group form-group--actions">
+            <button type="submit" class="btn btn--primary btn--sm"
+                    data-i18n="contacts.edit"></button>
+            <button type="button" id="btn-cancel-edit-contact"
+                    class="btn btn--sm" data-i18n="action.cancel"></button>
+          </div>
+        </form>
+      </div>
+
+      <div class="badge-panel__section">
+        <h2 class="badge-panel__section-title" data-i18n="apartments.title"></h2>
+
+        ${contact.apts.length === 0
+          ? `<p class="badge-panel__empty" data-i18n="apartments.empty"></p>`
+          : `<table class="badge-table">
+              <thead>
+                <tr>
+                  <th data-i18n="apartments.apt"></th>
+                  <th data-i18n="apartments.block"></th>
+                  <th data-i18n="apartments.floor"></th>
+                  <th data-i18n="apartments.scsaddr"></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${contact.apts.map(apt => `
+                  <tr>
+                    <td>${_esc(apt.apt ?? '')}</td>
+                    <td>${_esc(apt.block ?? '')}</td>
+                    <td>${_esc(apt.floor ?? '')}</td>
+                    <td class="badge-table__uid">${apt.scsAddr ?? ''}</td>
+                    <td>
+                      <button class="btn btn--danger btn--sm"
+                              data-action="remove-apt"
+                              data-member-id="${_selectedMemberId}"
+                              data-apt-id="${apt.id}"
+                              data-i18n="badges.remove">
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+             </table>`
+        }
+
+        <form id="add-apt-form" class="add-badge-form" style="margin-top:16px" novalidate>
+          <input type="hidden" name="memberId" value="${_selectedMemberId}">
+          <div class="form-group">
+            <label class="form-label" for="apt-apt"
+                   data-i18n="apartments.apt"></label>
+            <input class="form-input" type="text" id="apt-apt"
+                   name="apt" maxlength="32" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="apt-block"
+                   data-i18n="apartments.block"></label>
+            <input class="form-input" type="text" id="apt-block"
+                   name="block" maxlength="32" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="apt-floor"
+                   data-i18n="apartments.floor"></label>
+            <input class="form-input" type="text" id="apt-floor"
+                   name="floor" maxlength="32" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="apt-scsaddr"
+                   data-i18n="apartments.scsaddr"></label>
+            <input class="form-input form-input--mono" type="number"
+                   id="apt-scsaddr" name="scsAddr"
+                   min="0" max="9999" autocomplete="off">
+            <span class="form-error" id="error-apt-scsaddr" hidden></span>
+          </div>
+          <div class="form-group form-group--actions">
+            <button type="submit" class="btn btn--primary"
+                    data-i18n="apartments.add"></button>
+          </div>
+        </form>
       </div>
 
       <div class="badge-panel__section">
@@ -560,6 +704,7 @@ function _renderBadgePanel(panel, state) {
 
   _applyI18n();
   _bindBadgeFormEvents(panel);
+  _bindContactPanelActions(panel);
 }
 
 // ---------------------------------------------------------------------------
@@ -604,6 +749,161 @@ function _bindBadgeFormEvents(panel) {
 
     showSuccess('success.badge.added');
   });
+}
+
+// ---------------------------------------------------------------------------
+// Add contact button & form (left panel)
+// ---------------------------------------------------------------------------
+
+function _bindAddContactButton() {
+  document.addEventListener('click', e => {
+    if (e.target.id === 'btn-add-contact' || e.target.closest('#btn-add-contact')) {
+      const wrap = document.getElementById('add-contact-wrap');
+      if (!wrap) return;
+      wrap.hidden = !wrap.hidden;
+      if (!wrap.hidden) wrap.querySelector('input')?.focus();
+      return;
+    }
+    if (e.target.id === 'btn-cancel-add-contact') {
+      const wrap = document.getElementById('add-contact-wrap');
+      if (!wrap) return;
+      wrap.hidden = true;
+      const form = wrap.querySelector('form');
+      if (form) { form.reset(); _clearFormErrors(form); }
+    }
+  });
+
+  document.addEventListener('submit', e => {
+    if (e.target.id !== 'add-contact-form') return;
+    e.preventDefault();
+    const form = e.target;
+    _clearFormErrors(form);
+    const name    = form.querySelector('[name="name"]').value;
+    const surname = form.querySelector('[name="surname"]').value;
+    const result  = _callbacks.onAddContact({ name, surname });
+    if (!result.ok) {
+      if (result.field === 'system') {
+        _showToast(t(result.error), 'toast--error');
+      } else {
+        const errorIds = { name: '#error-new-name', surname: '#error-new-surname' };
+        const el = form.querySelector(errorIds[result.field]);
+        if (el) { el.textContent = t(result.error); el.hidden = false; }
+      }
+      return;
+    }
+    form.reset();
+    const wrap = document.getElementById('add-contact-wrap');
+    if (wrap) wrap.hidden = true;
+    showSuccess('success.contact.added');
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Apartment remove button (global delegated handler)
+// ---------------------------------------------------------------------------
+
+function _bindApartmentRemoveButton() {
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="remove-apt"]');
+    if (!btn) return;
+    if (!window.confirm(t('confirm.delete_apartment'))) return;
+    const memberId = btn.dataset.memberId;
+    const aptId    = btn.dataset.aptId;
+    const result   = _callbacks.onRemoveApartment?.({ memberId, aptId });
+    if (result?.ok) {
+      showSuccess('success.apartment.deleted');
+    } else {
+      showSystemError('error.save');
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Contact panel actions (bound per render)
+// ---------------------------------------------------------------------------
+
+function _bindContactPanelActions(panel) {
+  const editWrap = panel.querySelector('#edit-contact-wrap');
+
+  // Toggle edit form
+  const btnEdit = panel.querySelector('#btn-edit-contact');
+  if (btnEdit && editWrap) {
+    btnEdit.addEventListener('click', () => {
+      editWrap.hidden = !editWrap.hidden;
+      if (!editWrap.hidden) editWrap.querySelector('input')?.focus();
+    });
+  }
+
+  // Cancel edit
+  const btnCancelEdit = panel.querySelector('#btn-cancel-edit-contact');
+  if (btnCancelEdit && editWrap) {
+    btnCancelEdit.addEventListener('click', () => {
+      editWrap.hidden = true;
+      const form = editWrap.querySelector('form');
+      if (form) _clearFormErrors(form);
+    });
+  }
+
+  // Submit edit form
+  const editForm = panel.querySelector('#edit-contact-form');
+  if (editForm) {
+    editForm.addEventListener('submit', e => {
+      e.preventDefault();
+      _clearFormErrors(editForm);
+      const memberId = editForm.querySelector('[name="memberId"]').value;
+      const name     = editForm.querySelector('[name="name"]').value;
+      const surname  = editForm.querySelector('[name="surname"]').value;
+      const result   = _callbacks.onEditContact({ memberId, name, surname });
+      if (!result.ok) {
+        if (result.field === 'system') {
+          _showToast(t(result.error), 'toast--error');
+        } else {
+          const errorIds = { name: '#error-edit-name', surname: '#error-edit-surname' };
+          const el = editForm.querySelector(errorIds[result.field]);
+          if (el) { el.textContent = t(result.error); el.hidden = false; }
+        }
+        return;
+      }
+      showSuccess('success.contact.updated');
+    });
+  }
+
+  // Delete contact
+  const btnDelete = panel.querySelector('#btn-delete-contact');
+  if (btnDelete) {
+    btnDelete.addEventListener('click', () => {
+      if (!window.confirm(t('confirm.delete_contact'))) return;
+      const memberId = btnDelete.dataset.memberId;
+      const result   = _callbacks.onDeleteContact({ memberId });
+      if (!result?.ok) showSystemError('error.save');
+    });
+  }
+
+  // Add apartment form
+  const aptForm = panel.querySelector('#add-apt-form');
+  if (aptForm) {
+    aptForm.addEventListener('submit', e => {
+      e.preventDefault();
+      _clearFormErrors(aptForm);
+      const memberId = aptForm.querySelector('[name="memberId"]').value;
+      const apt      = aptForm.querySelector('[name="apt"]').value;
+      const block    = aptForm.querySelector('[name="block"]').value;
+      const floor    = aptForm.querySelector('[name="floor"]').value;
+      const scsAddr  = aptForm.querySelector('[name="scsAddr"]').value;
+      const result   = _callbacks.onAddApartment({ memberId, apt, block, floor, scsAddr });
+      if (!result.ok) {
+        if (result.field === 'system') {
+          _showToast(t(result.error), 'toast--error');
+        } else if (result.field === 'scsaddr') {
+          const el = aptForm.querySelector('#error-apt-scsaddr');
+          if (el) { el.textContent = t(result.error); el.hidden = false; }
+        }
+        return;
+      }
+      aptForm.reset();
+      showSuccess('success.apartment.added');
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------

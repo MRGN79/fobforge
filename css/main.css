@@ -157,9 +157,12 @@ body {
 }
 
 .panel__header {
-  padding:       14px 20px;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink:   0;
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         14px 20px;
+  border-bottom:   1px solid var(--color-border);
+  flex-shrink:     0;
 }
 
 .panel__title {
@@ -389,9 +392,20 @@ body {
 }
 
 .badge-panel__header {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--color-border);
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  gap:             16px;
+  margin-bottom:   24px;
+  padding-bottom:  16px;
+  border-bottom:   1px solid var(--color-border);
+}
+
+.badge-panel__actions {
+  display:     flex;
+  gap:         8px;
+  flex-shrink: 0;
+  margin-top:  2px;
 }
 
 .badge-panel__name {
@@ -496,6 +510,60 @@ body {
   background: rgba(255, 170, 0, 0.1);
   border:     1px solid rgba(255, 170, 0, 0.2);
   color:      var(--color-warn);
+}
+
+/* ---------------------------------------------------------------------------
+   Add contact form (left panel inline)
+--------------------------------------------------------------------------- */
+
+.add-contact-wrap {
+  padding:       12px;
+  border-bottom: 1px solid var(--color-border);
+  background:    var(--color-surface-2);
+  flex-shrink:   0;
+}
+
+.add-contact-wrap[hidden] {
+  display: none;
+}
+
+.add-contact-form {
+  display:        flex;
+  flex-direction: column;
+  gap:            8px;
+}
+
+.add-contact-form .form-group {
+  min-width: unset;
+}
+
+.add-contact-form .form-group--actions {
+  flex-direction:  row;
+  justify-content: flex-end;
+  margin-top:      4px;
+}
+
+/* ---------------------------------------------------------------------------
+   Edit contact form (right panel inline)
+--------------------------------------------------------------------------- */
+
+.edit-contact-wrap {
+  margin-bottom:  20px;
+  padding:        16px;
+  background:     var(--color-surface-2);
+  border-radius:  var(--radius-md);
+  border:         1px solid var(--color-border);
+}
+
+.edit-contact-wrap[hidden] {
+  display: none;
+}
+
+.edit-contact-form {
+  display:     flex;
+  flex-wrap:   wrap;
+  gap:         12px;
+  align-items: flex-end;
 }
 
 /* ---------------------------------------------------------------------------

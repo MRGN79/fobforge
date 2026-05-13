@@ -4,13 +4,15 @@
 // No DOM manipulation here — that lives in ui.js.
 // No file I/O here — that lives in prj.js and db.js.
 
-import { initI18n }                        from './i18n.js';
-import { validateUID, validateAssignment } from './validate.js';
-import { readPrj, writePrj }               from './prj.js';
+import { initI18n }                                                    from './i18n.js';
+import { validateUID, validateAssignment, validateMemberName, validateMemberSurname, validateApartmentScsAddr } from './validate.js';
+import { readPrj, writePrj }                                           from './prj.js';
 import {
   initDb, loadDb, createEmptyDb, exportDb, closeDb,
   getContacts, getBadges, getAssignments,
   addBadge, assignBadge, removeBadge,
+  addContact, editContact, deleteContact,
+  addApartment, assignApartment, editApartment, removeApartment,
 } from './db.js';
 import {
   initUI, renderContacts, clearSelection, clearSearch,
@@ -31,6 +33,18 @@ const state = {
   rawXtz0:     null,
   rawXtz1:     null,
 };
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function _generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Bootstrap
@@ -58,12 +72,17 @@ export async function bootstrap() {
   });
 
   initUI({
-    onFileLoad:    handleFileLoad,
-    onAddBadge:    handleAddBadge,
-    onRemoveBadge: handleRemoveBadge,
-    onSave:        handleSave,
-    onClose:       handleClose,
-    onNew:         handleNew,
+    onFileLoad:        handleFileLoad,
+    onAddBadge:        handleAddBadge,
+    onRemoveBadge:     handleRemoveBadge,
+    onSave:            handleSave,
+    onClose:           handleClose,
+    onNew:             handleNew,
+    onAddContact:      handleAddContact,
+    onEditContact:     handleEditContact,
+    onDeleteContact:   handleDeleteContact,
+    onAddApartment:    handleAddApartment,
+    onRemoveApartment: handleRemoveApartment,
   });
 
   return true;
@@ -156,6 +175,147 @@ export function handleRemoveBadge({ memberId, badgeId }) {
     console.error(e);
     return { ok: false };
   }
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Contact Handlers
+// ---------------------------------------------------------------------------
+
+export function handleAddContact({ name, surname }) {
+  name = name.trim();
+  surname = surname.trim();
+
+  const nameResult = validateMemberName(name);
+  if (!nameResult.valid) {
+    return { ok: false, field: 'name', error: nameResult.error };
+  }
+
+  const surnameResult = validateMemberSurname(surname);
+  if (!surnameResult.valid) {
+    return { ok: false, field: 'surname', error: surnameResult.error };
+  }
+
+  try {
+    const memberId = _generateUUID();
+    addContact(memberId, name, surname);
+  } catch (e) {
+    console.error(e);
+    return { ok: false, field: 'system', error: 'error.save' };
+  }
+
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  return { ok: true };
+}
+
+export function handleEditContact({ memberId, name, surname }) {
+  name = name.trim();
+  surname = surname.trim();
+
+  const nameResult = validateMemberName(name);
+  if (!nameResult.valid) {
+    return { ok: false, field: 'name', error: nameResult.error };
+  }
+
+  const surnameResult = validateMemberSurname(surname);
+  if (!surnameResult.valid) {
+    return { ok: false, field: 'surname', error: surnameResult.error };
+  }
+
+  try {
+    editContact(memberId, name, surname);
+  } catch (e) {
+    console.error(e);
+    return { ok: false, field: 'system', error: 'error.save' };
+  }
+
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  return { ok: true };
+}
+
+export function handleDeleteContact({ memberId }) {
+  try {
+    deleteContact(memberId);
+  } catch (e) {
+    console.error(e);
+    return { ok: false };
+  }
+
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Apartment Handlers
+// ---------------------------------------------------------------------------
+
+export function handleAddApartment({ memberId, apt, scsAddr, block, floor }) {
+  apt = (apt ?? '').trim();
+  scsAddr = scsAddr ? parseInt(scsAddr, 10) : '';
+  block = (block ?? '').trim();
+  floor = (floor ?? '').trim();
+
+  const scsResult = validateApartmentScsAddr(scsAddr);
+  if (!scsResult.valid) {
+    return { ok: false, field: 'scsaddr', error: scsResult.error };
+  }
+
+  try {
+    const aptId = _generateUUID();
+    addApartment(aptId, apt, scsAddr || null, block, floor);
+    assignApartment(memberId, aptId);
+  } catch (e) {
+    console.error(e);
+    return { ok: false, field: 'system', error: 'error.save' };
+  }
+
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  return { ok: true };
+}
+
+export function handleEditApartment({ aptId, apt, scsAddr, block, floor }) {
+  apt = (apt ?? '').trim();
+  scsAddr = scsAddr ? parseInt(scsAddr, 10) : '';
+  block = (block ?? '').trim();
+  floor = (floor ?? '').trim();
+
+  const scsResult = validateApartmentScsAddr(scsAddr);
+  if (!scsResult.valid) {
+    return { ok: false, field: 'scsaddr', error: scsResult.error };
+  }
+
+  try {
+    editApartment(aptId, apt, scsAddr || null, block, floor);
+  } catch (e) {
+    console.error(e);
+    return { ok: false, field: 'system', error: 'error.save' };
+  }
+
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  return { ok: true };
+}
+
+export function handleRemoveApartment({ memberId, aptId }) {
+  try {
+    removeApartment(memberId, aptId);
+  } catch (e) {
+    console.error(e);
+    return { ok: false };
+  }
+
   state.dirty = true;
   setDirty(true);
   _refreshState();

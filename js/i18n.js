@@ -71,6 +71,37 @@ const strings = {
     'success.badge.added':      'Badge added successfully',
     'success.badge.removed':    'Badge removed',
     'success.file.saved':       'File saved successfully',
+
+    // Actions
+    'action.cancel':            'Cancel',
+
+    // Contact management
+    'contacts.add':             'Add contact',
+    'contacts.edit':            'Edit contact',
+    'contacts.delete':          'Delete contact',
+    'contacts.name':            'Name',
+    'contacts.surname':         'Surname',
+    'error.member.name.required': 'Name is required',
+    'error.member.surname.required': 'Surname is required',
+    'success.contact.added':    'Contact added successfully',
+    'success.contact.updated':  'Contact updated',
+    'success.contact.deleted':  'Contact deleted',
+    'confirm.delete_contact':   'Delete this contact? (all badges will be removed)',
+
+    // Apartment management
+    'apartments.title':         'Apartments',
+    'apartments.empty':         'No apartments assigned',
+    'apartments.add':           'Add apartment',
+    'apartments.edit':          'Edit apartment',
+    'apartments.apt':           'Apartment',
+    'apartments.scsaddr':       'SCS Address',
+    'apartments.block':         'Block',
+    'apartments.floor':         'Floor',
+    'error.apartment.scsaddr.numeric': 'SCS address must be numeric',
+    'success.apartment.added':  'Apartment added',
+    'success.apartment.updated': 'Apartment updated',
+    'success.apartment.deleted': 'Apartment removed',
+    'confirm.delete_apartment': 'Remove this apartment?',
   },
 
   es: {
@@ -136,6 +167,37 @@ const strings = {
     'success.badge.added':      'Badge añadido correctamente',
     'success.badge.removed':    'Badge eliminado',
     'success.file.saved':       'Fichero guardado correctamente',
+
+    // Actions
+    'action.cancel':            'Cancelar',
+
+    // Contact management
+    'contacts.add':             'Añadir contacto',
+    'contacts.edit':            'Editar contacto',
+    'contacts.delete':          'Eliminar contacto',
+    'contacts.name':            'Nombre',
+    'contacts.surname':         'Apellido',
+    'error.member.name.required': 'El nombre es requerido',
+    'error.member.surname.required': 'El apellido es requerido',
+    'success.contact.added':    'Contacto añadido correctamente',
+    'success.contact.updated':  'Contacto actualizado',
+    'success.contact.deleted':  'Contacto eliminado',
+    'confirm.delete_contact':   '¿Eliminar este contacto? (se eliminarán todos sus badges)',
+
+    // Apartment management
+    'apartments.title':         'Apartamentos',
+    'apartments.empty':         'Sin apartamentos asignados',
+    'apartments.add':           'Añadir apartamento',
+    'apartments.edit':          'Editar apartamento',
+    'apartments.apt':           'Apartamento',
+    'apartments.scsaddr':       'Dirección SCS',
+    'apartments.block':         'Bloque',
+    'apartments.floor':         'Piso',
+    'error.apartment.scsaddr.numeric': 'La dirección SCS debe ser numérica',
+    'success.apartment.added':  'Apartamento añadido',
+    'success.apartment.updated': 'Apartamento actualizado',
+    'success.apartment.deleted': 'Apartamento eliminado',
+    'confirm.delete_apartment': '¿Eliminar este apartamento?',
   }
 };
 
