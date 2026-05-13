@@ -80,6 +80,12 @@ function _renderShell() {
         <span class="header__subtitle" data-i18n="app.subtitle"></span>
       </div>
       <div class="header__actions">
+        <a href="https://github.com/MRGN79/fobforge/issues/new"
+           class="feedback-link"
+           target="_blank"
+           rel="noopener noreferrer"
+           data-i18n-title="feedback.title"
+           data-i18n="feedback.link"></a>
         <select id="lang-selector" class="lang-selector">
           <option value="en" data-i18n="lang.en"></option>
           <option value="es" data-i18n="lang.es"></option>
@@ -184,6 +190,9 @@ function _applyI18n() {
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.dataset.i18nTitle);
   });
 }
 

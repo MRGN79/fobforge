@@ -87,6 +87,10 @@ const strings = {
     'success.contact.deleted':  'Contact deleted',
     'confirm.delete_contact':   'Delete this contact? (all badges will be removed)',
 
+    // Feedback
+    'feedback.link':            'Feedback',
+    'feedback.title':           'Report a bug or suggest a feature',
+
     // Apartment management
     'apartments.title':         'Apartments',
     'apartments.empty':         'No apartments assigned',
@@ -180,6 +184,10 @@ const strings = {
     'success.contact.updated':  'Contacto actualizado',
     'success.contact.deleted':  'Contacto eliminado',
     'confirm.delete_contact':   '¿Eliminar este contacto? (se eliminarán todos sus badges)',
+
+    // Feedback
+    'feedback.link':            'Feedback',
+    'feedback.title':           'Reportar un error o sugerir una mejora',
 
     // Apartment management
     'apartments.title':         'Apartamentos',
