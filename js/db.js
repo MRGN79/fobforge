@@ -275,13 +275,62 @@ export function editContact(memberId, name, surname) {
 }
 
 // Delete a contact and cascade cleanup.
-// Removes: MEMBER_APT, MEMBER_BADGE, then MEMBER
+// Removes: MEMBER, MEMBER_APT, MEMBER_BADGE, and any orphaned BADGE/APT records.
 
 export function deleteContact(memberId) {
   if (!_db) throw new Error('No database loaded');
+
+  // Collect badge IDs before removing assignments (to clean up orphans after)
+  const badgeStmt = _db.prepare('SELECT ID_BADGE FROM MEMBER_BADGE WHERE ID_MEMBER = ?');
+  const badgeIds = [];
+  try {
+    badgeStmt.bind([memberId]);
+    while (badgeStmt.step()) badgeIds.push(badgeStmt.get()[0]);
+  } finally {
+    badgeStmt.free();
+  }
+
+  // Collect apt IDs before removing assignments (to clean up orphans after)
+  const aptStmt = _db.prepare('SELECT ID_APT FROM MEMBER_APT WHERE ID_MEMBER = ?');
+  const aptIds = [];
+  try {
+    aptStmt.bind([memberId]);
+    while (aptStmt.step()) aptIds.push(aptStmt.get()[0]);
+  } finally {
+    aptStmt.free();
+  }
+
   _db.run('DELETE FROM MEMBER_APT WHERE ID_MEMBER = ?', [memberId]);
   _db.run('DELETE FROM MEMBER_BADGE WHERE ID_MEMBER = ?', [memberId]);
   _db.run('DELETE FROM MEMBER WHERE ID_MEMBER = ?', [memberId]);
+
+  // Delete orphaned badges (no remaining assignments anywhere)
+  for (const badgeId of badgeIds) {
+    const countStmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?');
+    let count = 0;
+    try {
+      countStmt.bind([badgeId]);
+      countStmt.step();
+      count = countStmt.getAsObject()['cnt'] ?? 0;
+    } finally {
+      countStmt.free();
+    }
+    if (count === 0) _db.run('DELETE FROM BADGE WHERE ID_BADGE = ?', [badgeId]);
+  }
+
+  // Delete orphaned apartments (no remaining member links anywhere)
+  for (const aptId of aptIds) {
+    const countStmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_APT WHERE ID_APT = ?');
+    let count = 0;
+    try {
+      countStmt.bind([aptId]);
+      countStmt.step();
+      count = countStmt.getAsObject()['cnt'] ?? 0;
+    } finally {
+      countStmt.free();
+    }
+    if (count === 0) _db.run('DELETE FROM APT WHERE ID_APT = ?', [aptId]);
+  }
 }
 
 // ---------------------------------------------------------------------------

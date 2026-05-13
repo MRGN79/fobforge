@@ -271,7 +271,7 @@ export function handleAddApartment({ memberId, apt, scsAddr, block, floor }) {
 
   try {
     const aptId = _generateUUID();
-    addApartment(aptId, apt, scsAddr || null, block, floor);
+    addApartment(aptId, apt, scsAddr === '' ? null : scsAddr, block, floor);
     assignApartment(memberId, aptId);
   } catch (e) {
     console.error(e);
@@ -296,7 +296,7 @@ export function handleEditApartment({ aptId, apt, scsAddr, block, floor }) {
   }
 
   try {
-    editApartment(aptId, apt, scsAddr || null, block, floor);
+    editApartment(aptId, apt, scsAddr === '' ? null : scsAddr, block, floor);
   } catch (e) {
     console.error(e);
     return { ok: false, field: 'system', error: 'error.save' };

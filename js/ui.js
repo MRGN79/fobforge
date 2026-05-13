@@ -260,6 +260,7 @@ function _bindFileEvents() {
 const FILE_SIZE_LIMIT = 20 * 1024 * 1024; // 20 MB
 
 function _loadFile(file) {
+  if (_isDirty && !window.confirm(t('confirm.close'))) return;
   if (file.size > FILE_SIZE_LIMIT) {
     showSystemError('error.file.toobig');
     return;
@@ -830,7 +831,7 @@ function _bindContactPanelActions(panel) {
   if (btnEdit && editWrap) {
     btnEdit.addEventListener('click', () => {
       editWrap.hidden = !editWrap.hidden;
-      if (!editWrap.hidden) editWrap.querySelector('input')?.focus();
+      if (!editWrap.hidden) editWrap.querySelector('input:not([type="hidden"])')?.focus();
     });
   }
 
