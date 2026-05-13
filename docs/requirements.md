@@ -171,30 +171,5 @@ and mouse.
 
 ---
 
-## 8. Format research notes
-
-The following was discovered through binary analysis of real `.prj` files
-and the `GUIDirector.exe` executable:
-
-- A `.prj` file is a **ZIP archive** renamed to `.prj`
-- It contains three files: `0.xtz`, `DCDB.xtz`, `1.xtz`
-- Each `.xtz` file is itself an encrypted ZIP (ZipCrypto)
-- `DCDB.xtz` contains `Device_contacts.db3`, a standard SQLite3 database
-- The SQLite database contains the following tables:
-  - `MEMBER` — contacts / residents
-  - `APT` — apartments
-  - `MEMBER_APT` — contact ↔ apartment assignments
-  - `BADGE` — RFID badges (UID as 8-char hex string)
-  - `MEMBER_BADGE` — contact ↔ badge assignments
-  - `MEMBER_LOCK_PASSWORD` — numeric access codes
-  - `MEMBER_MINUTIAE` — biometric data (fingerprints)
-  - `MEMBER_MINUTIAE_SCAN` — biometric scan data
-  - `DB_INFO` — database metadata
-- Encryption uses ZipCrypto (legacy ZIP encryption, not AES)
-- Keys are hardcoded in `GUIDirector.exe`
-- No EULA was found in the software — no reverse engineering clause exists
-
----
-
 *This document is part of the FobForge project.*  
 *Repository: https://github.com/MRGN79/fobforge*

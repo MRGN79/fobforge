@@ -209,14 +209,13 @@ Core function:
 
 ### 6.1 Cryptographic keys (NFR-04)
 
-The .prj format uses two hardcoded ZipCrypto keys discovered through
-binary analysis of GUIDirector.exe. These keys are not secret in any
-meaningful sense — they are identical across all .prj files and can be
-found by anyone analyzing the executable.
+The .prj format uses two hardcoded ZipCrypto keys. These keys are not secret 
+in any meaningful sense — they are identical across all .prj files and apply to 
+the legacy ZIP encryption scheme used in the format.
 
-However, to avoid publishing them in plain text in a public repository,
-they are stored obfuscated in prj.js and decoded at runtime.
-This is a cosmetic measure, not a security guarantee.
+To avoid publishing them in plain text in a public repository, they are stored 
+obfuscated in prj.js and decoded at runtime. This is a cosmetic measure, not a 
+security guarantee.
 
 ### 6.2 Client-side only
 
