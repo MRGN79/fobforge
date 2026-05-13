@@ -233,10 +233,14 @@ export function removeBadge(memberId, badgeId) {
 
   // Check if badge is still assigned to anyone else
   const stmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?');
-  stmt.bind([badgeId]);
-  stmt.step();
-  const count = stmt.getAsObject()['cnt'] ?? 0;
-  stmt.free();
+  let count = 0;
+  try {
+    stmt.bind([badgeId]);
+    stmt.step();
+    count = stmt.getAsObject()['cnt'] ?? 0;
+  } finally {
+    stmt.free();
+  }
 
   if (count === 0) {
     _db.run('DELETE FROM BADGE WHERE ID_BADGE = ?', [badgeId]);

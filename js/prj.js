@@ -71,6 +71,9 @@ function _keyByte(keys) {
 }
 
 export function zipcryptoDecrypt(encData, password) {
+  if (encData.length < 12) {
+    throw new Error('Encrypted data too short (< 12 bytes) — file may be corrupt');
+  }
   const keys = initKeys(password);
   // Decrypt and discard the 12-byte encryption header
   for (let i = 0; i < 12; i++) {
@@ -119,7 +122,18 @@ export function zipcryptoEncrypt(plainData, password, crc32val) {
 // DEFLATE / INFLATE (via browser DecompressionStream / CompressionStream)
 // ---------------------------------------------------------------------------
 
+// Feature detection for compression APIs (added in Chrome 80, Firefox 110, Safari 16.1)
+function _checkCompressionSupport() {
+  if (typeof DecompressionStream === 'undefined' || typeof CompressionStream === 'undefined') {
+    throw new Error(
+      'Compression APIs not supported in this browser. ' +
+      'Please use a modern browser: Chrome 80+, Firefox 110+, Safari 16.1+, Edge 80+'
+    );
+  }
+}
+
 async function inflate(compressed) {
+  _checkCompressionSupport();
   const ds = new DecompressionStream('deflate-raw');
   const writer = ds.writable.getWriter();
   const reader = ds.readable.getReader();
@@ -133,9 +147,19 @@ async function inflate(compressed) {
     }
   };
 
-  const readPromise = readAll();
-  await writer.write(compressed);
-  await writer.close();
+  const readPromise = readAll().catch(e => {
+    reader.cancel();
+    throw e;
+  });
+
+  try {
+    await writer.write(compressed);
+    await writer.close();
+  } catch (e) {
+    reader.cancel();
+    throw e;
+  }
+
   await readPromise;
 
   const total = chunks.reduce((s, c) => s + c.length, 0);
@@ -149,6 +173,7 @@ async function inflate(compressed) {
 }
 
 async function deflate(data) {
+  _checkCompressionSupport();
   const cs = new CompressionStream('deflate-raw');
   const writer = cs.writable.getWriter();
   const reader = cs.readable.getReader();
@@ -162,9 +187,19 @@ async function deflate(data) {
     }
   };
 
-  const readPromise = readAll();
-  await writer.write(data);
-  await writer.close();
+  const readPromise = readAll().catch(e => {
+    reader.cancel();
+    throw e;
+  });
+
+  try {
+    await writer.write(data);
+    await writer.close();
+  } catch (e) {
+    reader.cancel();
+    throw e;
+  }
+
   await readPromise;
 
   const total = chunks.reduce((s, c) => s + c.length, 0);
@@ -212,6 +247,14 @@ export function parseZipEntries(buf) {
     const fname      = new TextDecoder().decode(buf.slice(idx+30, idx+30+fnLen));
     const dataStart  = idx + 30 + fnLen + extraLen;
     const encrypted  = !!(flags & 1);
+
+    // Validate entry data doesn't extend beyond buffer
+    if (dataStart + compSize > buf.length) {
+      throw new Error(
+        `ZIP entry "${fname}" data extends beyond buffer ` +
+        `(requires ${dataStart + compSize}, have ${buf.length} bytes)`
+      );
+    }
 
     entries.push({
       fname,
