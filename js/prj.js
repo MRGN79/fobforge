@@ -11,7 +11,6 @@
 // ---------------------------------------------------------------------------
 // Key management (NFR-04)
 // Keys are Base64-encoded to avoid plain text in the repository.
-// This is obfuscation, not encryption.
 // ---------------------------------------------------------------------------
 
 function _k(e) { return atob(e); }

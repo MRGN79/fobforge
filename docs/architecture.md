@@ -209,13 +209,9 @@ Core function:
 
 ### 6.1 Cryptographic keys (NFR-04)
 
-The .prj format uses two hardcoded ZipCrypto keys. These keys are not secret 
-in any meaningful sense — they are identical across all .prj files and apply to 
-the legacy ZIP encryption scheme used in the format.
-
-To avoid publishing them in plain text in a public repository, they are stored 
-obfuscated in prj.js and decoded at runtime. This is a cosmetic measure, not a 
-security guarantee.
+The .prj format uses two hardcoded ZipCrypto keys. To comply with NFR-04,
+they are stored Base64-encoded in prj.js and decoded at runtime, so they do
+not appear in plain text in the repository.
 
 ### 6.2 Client-side only
 
