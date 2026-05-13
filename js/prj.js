@@ -417,72 +417,73 @@ async function buildZip(files, password) {
 
 // Read a .prj file and return:
 // {
-//   dbBytes: Uint8Array,   // raw SQLite bytes
-//   rawXtz0: Uint8Array,   // 0.xtz inner content (kept as-is)
-//   rawXtz1: Uint8Array,   // 1.xtz inner content (kept as-is)
+//   dbBytes: Uint8Array,   // raw SQLite bytes (the only part we modify)
+//   prjCtx: {              // opaque round-trip context — pass to writePrj unchanged
+//     outerOrder: [{ name, data }],  // all outer ZIP entries in original order;
+//                                    // data=null marks the DCDB.xtz slot (rebuilt on write)
+//     dcdbOrder:  [{ name, data }],  // all DCDB.xtz inner entries in original order;
+//                                    // data=null marks the .db3 slot (replaced by dbBytes on write)
+//   }
 // }
 
 export async function readPrj(arrayBuffer) {
   const outer = new Uint8Array(arrayBuffer);
   const outerEntries = parseZipEntries(outer);
   const ko = _k(_KO);
-
-  const xtzMap = {};
-  for (const entry of outerEntries) {
-    if (entry.fname.endsWith('.xtz')) {
-      xtzMap[entry.fname] = await readEntry(entry, ko);
-    }
-  }
-
-  if (!xtzMap['DCDB.xtz']) {
-    throw new Error('DCDB.xtz not found in .prj file');
-  }
-
   const ki = _k(_KI);
-  const dcdbEntries = parseZipEntries(xtzMap['DCDB.xtz']);
-  let dbBytes = null;
-  for (const entry of dcdbEntries) {
-    if (entry.fname.endsWith('.db3')) {
-      dbBytes = await readEntry(entry, ki);
-      break;
+
+  const outerOrder = [];
+  const dcdbOrder  = [];
+  let dbBytes  = null;
+  let hasDcdb  = false;
+
+  for (const entry of outerEntries) {
+    if (entry.fname === 'DCDB.xtz') {
+      hasDcdb = true;
+      const dcdbRaw     = await readEntry(entry, ko);
+      const dcdbEntries = parseZipEntries(dcdbRaw);
+      for (const inner of dcdbEntries) {
+        if (inner.fname.endsWith('.db3')) {
+          dbBytes = await readEntry(inner, ki);
+          dcdbOrder.push({ name: inner.fname, data: null });
+        } else {
+          dcdbOrder.push({ name: inner.fname, data: await readEntry(inner, ki) });
+        }
+      }
+      outerOrder.push({ name: 'DCDB.xtz', data: null });
+    } else {
+      outerOrder.push({ name: entry.fname, data: await readEntry(entry, ko) });
     }
   }
 
-  if (!dbBytes) {
-    throw new Error('Device_contacts.db3 not found in DCDB.xtz');
-  }
+  if (!hasDcdb) throw new Error('DCDB.xtz not found in .prj file');
+  if (!dbBytes)  throw new Error('Device_contacts.db3 not found in DCDB.xtz');
 
-  return {
-    dbBytes,
-    rawXtz0: xtzMap['0.xtz'],
-    rawXtz1: xtzMap['1.xtz'],
-  };
+  return { dbBytes, prjCtx: { outerOrder, dcdbOrder } };
 }
 
 // Write a .prj file from:
 // {
-//   dbBytes: Uint8Array,   // modified SQLite bytes
-//   rawXtz0: Uint8Array,   // 0.xtz content (unchanged)
-//   rawXtz1: Uint8Array,   // 1.xtz content (unchanged)
+//   dbBytes: Uint8Array,   // modified (or original) SQLite bytes
+//   prjCtx:  object|null,  // context from readPrj; null produces a minimal new .prj
 // }
 // Returns a Uint8Array ready for download.
 
-export async function writePrj({ dbBytes, rawXtz0, rawXtz1 }) {
+export async function writePrj({ dbBytes, prjCtx }) {
   const ki = _k(_KI);
   const ko = _k(_KO);
 
-  // Rebuild DCDB.xtz
-  const dcdbZip = await buildZip([
-    { name: 'DCDB/Device_contacts.db3', data: dbBytes },
-  ], ki);
+  // Rebuild DCDB.xtz — replace the .db3 slot, preserve everything else in order
+  const dcdbFiles = prjCtx
+    ? prjCtx.dcdbOrder.map(e => ({ name: e.name, data: e.data ?? dbBytes }))
+    : [{ name: 'DCDB/Device_contacts.db3', data: dbBytes }];
 
-  // Rebuild outer .prj (preserve only entries that existed in the original)
-  const outerFiles = [
-    rawXtz0 ? { name: '0.xtz',    data: rawXtz0 } : null,
-               { name: 'DCDB.xtz', data: dcdbZip },
-    rawXtz1 ? { name: '1.xtz',    data: rawXtz1 } : null,
-  ].filter(Boolean);
-  const prjZip = await buildZip(outerFiles, ko);
+  const dcdbZip = await buildZip(dcdbFiles, ki);
 
-  return prjZip;
+  // Rebuild outer .prj — replace the DCDB.xtz slot, preserve everything else in order
+  const outerFiles = prjCtx
+    ? prjCtx.outerOrder.map(e => ({ name: e.name, data: e.data ?? dcdbZip }))
+    : [{ name: 'DCDB.xtz', data: dcdbZip }];
+
+  return buildZip(outerFiles, ko);
 }

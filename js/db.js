@@ -27,33 +27,70 @@ export function createEmptyDb() {
 
   _db = new _SQL.Database();
   _db.run(`
+    CREATE TABLE DB_INFO (
+      Parameter varchar(10) PRIMARY KEY NOT NULL,
+      Value     varchar(20)
+    );
     CREATE TABLE MEMBER (
-      ID_MEMBER TEXT PRIMARY KEY NOT NULL,
-      Name      TEXT NOT NULL DEFAULT '',
-      Surname   TEXT NOT NULL DEFAULT ''
+      ID_MEMBER     guid        PRIMARY KEY NOT NULL,
+      Name          varchar(50),
+      Surname       varchar(50),
+      GeneratedFlag INTEGER,
+      Visibility    INTEGER,
+      Descr         varchar(32)
     );
     CREATE TABLE APT (
-      ID_APT   TEXT PRIMARY KEY NOT NULL,
-      Apt      TEXT    DEFAULT '',
-      SCS_addr INTEGER DEFAULT 0,
-      Block    TEXT    DEFAULT '',
-      Floor    TEXT    DEFAULT ''
+      ID_APT    guid       PRIMARY KEY NOT NULL,
+      Apt       varchar(10),
+      SCS_addr  smallint,
+      Block     varchar(10),
+      Floor     varchar(10),
+      Call_code varchar(4)
     );
     CREATE TABLE MEMBER_APT (
-      ID_MEMBER TEXT NOT NULL,
-      ID_APT    TEXT NOT NULL
+      ID_MEMBER guid    NOT NULL,
+      ID_APT    guid    NOT NULL,
+      ROLE      INTEGER,
+      RINGTONE  INTEGER,
+      PRIMARY KEY (ID_MEMBER, ID_APT)
     );
     CREATE TABLE BADGE (
-      ID_BADGE   TEXT    PRIMARY KEY NOT NULL,
-      BADGE_TYPE INTEGER NOT NULL DEFAULT 0,
-      Note       TEXT    DEFAULT ''
+      ID_BADGE   char(8)  PRIMARY KEY NOT NULL,
+      BADGE_TYPE INTEGER,
+      Note       longchar
     );
     CREATE TABLE MEMBER_BADGE (
-      ID_MEMBER TEXT NOT NULL,
-      ID_BADGE  TEXT NOT NULL,
+      ID_MEMBER guid    NOT NULL,
+      ID_BADGE  char(8) NOT NULL,
       PRIMARY KEY (ID_MEMBER, ID_BADGE)
     );
+    CREATE TABLE MEMBER_LOCK_PASSWORD (
+      ID_MEMBER     guid        NOT NULL,
+      LOCK_PASSWORD varchar(13),
+      PASSWORD_TYPE INTEGER     NOT NULL,
+      PRIMARY KEY (ID_MEMBER, PASSWORD_TYPE)
+    );
+    CREATE TABLE MEMBER_MINUTIAE (
+      ID_MINUTIAE   guid     PRIMARY KEY NOT NULL,
+      Finger        INTEGER,
+      Hand          INTEGER,
+      Note          longchar,
+      MINUTIAE_TYPE INTEGER,
+      ID_MEMBER     guid     NOT NULL
+    );
+    CREATE TABLE MEMBER_MINUTIAE_SCAN (
+      ID_SCAN     guid    PRIMARY KEY NOT NULL,
+      SCAN        BLOB,
+      "Order"     INTEGER,
+      ID_MINUTIAE guid    NOT NULL
+    );
+    CREATE INDEX MEMBER_Index_Flag
+      ON MEMBER (GeneratedFlag);
+    CREATE INDEX MEMBER_LOCK_PASSWORD_idx_LOCK_PASSWORD
+      ON MEMBER_LOCK_PASSWORD (LOCK_PASSWORD);
   `);
+  _db.run(`INSERT INTO DB_INFO (Parameter, Value) VALUES (?, ?)`, ['Version', '2.1.0']);
+  _db.run(`INSERT INTO DB_INFO (Parameter, Value) VALUES (?, ?)`, ['Type', '1']);
 }
 
 // Load raw SQLite bytes into memory.
@@ -280,7 +317,7 @@ export function editContact(memberId, name, surname) {
 export function deleteContact(memberId) {
   if (!_db) throw new Error('No database loaded');
 
-  // Collect badge IDs before removing assignments (to clean up orphans after)
+  // Collect IDs of related records before removing links (orphan cleanup after)
   const badgeStmt = _db.prepare('SELECT ID_BADGE FROM MEMBER_BADGE WHERE ID_MEMBER = ?');
   const badgeIds = [];
   try {
@@ -290,7 +327,6 @@ export function deleteContact(memberId) {
     badgeStmt.free();
   }
 
-  // Collect apt IDs before removing assignments (to clean up orphans after)
   const aptStmt = _db.prepare('SELECT ID_APT FROM MEMBER_APT WHERE ID_MEMBER = ?');
   const aptIds = [];
   try {
@@ -300,9 +336,25 @@ export function deleteContact(memberId) {
     aptStmt.free();
   }
 
-  _db.run('DELETE FROM MEMBER_APT WHERE ID_MEMBER = ?', [memberId]);
-  _db.run('DELETE FROM MEMBER_BADGE WHERE ID_MEMBER = ?', [memberId]);
-  _db.run('DELETE FROM MEMBER WHERE ID_MEMBER = ?', [memberId]);
+  const minutiaeStmt = _db.prepare('SELECT ID_MINUTIAE FROM MEMBER_MINUTIAE WHERE ID_MEMBER = ?');
+  const minutiaeIds = [];
+  try {
+    minutiaeStmt.bind([memberId]);
+    while (minutiaeStmt.step()) minutiaeIds.push(minutiaeStmt.get()[0]);
+  } finally {
+    minutiaeStmt.free();
+  }
+
+  // Delete scans before minutiae (child rows first)
+  for (const id of minutiaeIds) {
+    _db.run('DELETE FROM MEMBER_MINUTIAE_SCAN WHERE ID_MINUTIAE = ?', [id]);
+  }
+
+  _db.run('DELETE FROM MEMBER_MINUTIAE WHERE ID_MEMBER = ?',      [memberId]);
+  _db.run('DELETE FROM MEMBER_LOCK_PASSWORD WHERE ID_MEMBER = ?', [memberId]);
+  _db.run('DELETE FROM MEMBER_APT WHERE ID_MEMBER = ?',           [memberId]);
+  _db.run('DELETE FROM MEMBER_BADGE WHERE ID_MEMBER = ?',         [memberId]);
+  _db.run('DELETE FROM MEMBER WHERE ID_MEMBER = ?',               [memberId]);
 
   // Delete orphaned badges (no remaining assignments anywhere)
   for (const badgeId of badgeIds) {

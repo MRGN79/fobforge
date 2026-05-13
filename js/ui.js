@@ -320,6 +320,7 @@ function _bindRemoveButton() {
   document.addEventListener('click', e => {
     const btn = e.target.closest('[data-action="remove"]');
     if (!btn) return;
+    if (!window.confirm(t('confirm.delete_badge'))) return;
     const memberId = btn.dataset.memberId;
     const badgeId  = btn.dataset.badgeId;
     const result   = _callbacks.onRemoveBadge({ memberId, badgeId });

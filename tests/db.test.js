@@ -43,6 +43,26 @@ describe('createEmptyDb', () => {
   it('starts with no assignments', () => {
     expect(getAssignments()).toEqual([]);
   });
+
+  it('creates the full BTicino-compatible schema (all 9 tables)', () => {
+    const db = _getDb();
+    const result = db.exec(
+      `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`
+    );
+    const tables = result[0].values.map(r => r[0]);
+    expect(tables).toEqual([
+      'APT', 'BADGE', 'DB_INFO', 'MEMBER', 'MEMBER_APT',
+      'MEMBER_BADGE', 'MEMBER_LOCK_PASSWORD', 'MEMBER_MINUTIAE',
+      'MEMBER_MINUTIAE_SCAN',
+    ]);
+  });
+
+  it('seeds DB_INFO with Version=2.1.0 and Type=1', () => {
+    const db = _getDb();
+    const result = db.exec(`SELECT Parameter, Value FROM DB_INFO ORDER BY Parameter`);
+    const rows = result[0].values;
+    expect(rows).toEqual(expect.arrayContaining([['Type', '1'], ['Version', '2.1.0']]));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -294,6 +314,30 @@ describe('deleteContact', () => {
     deleteContact('m1');
     const m2 = getContacts().find(c => c.id === 'm2');
     expect(m2.apts).toHaveLength(1);
+  });
+
+  it('removes MEMBER_LOCK_PASSWORD records for the deleted contact', () => {
+    addContact('m1', 'John', 'Doe');
+    const db = _getDb();
+    db.run(`INSERT INTO MEMBER_LOCK_PASSWORD (ID_MEMBER, LOCK_PASSWORD, PASSWORD_TYPE)
+            VALUES ('m1', '1234', 0)`);
+    deleteContact('m1');
+    const r = db.exec(`SELECT COUNT(*) FROM MEMBER_LOCK_PASSWORD WHERE ID_MEMBER = 'm1'`);
+    expect(r[0].values[0][0]).toBe(0);
+  });
+
+  it('removes MEMBER_MINUTIAE and MEMBER_MINUTIAE_SCAN records for the deleted contact', () => {
+    addContact('m1', 'John', 'Doe');
+    const db = _getDb();
+    db.run(`INSERT INTO MEMBER_MINUTIAE (ID_MINUTIAE, ID_MEMBER, MINUTIAE_TYPE)
+            VALUES ('min1', 'm1', 0)`);
+    db.run(`INSERT INTO MEMBER_MINUTIAE_SCAN (ID_SCAN, ID_MINUTIAE)
+            VALUES ('scan1', 'min1')`);
+    deleteContact('m1');
+    const minR  = db.exec(`SELECT COUNT(*) FROM MEMBER_MINUTIAE WHERE ID_MEMBER = 'm1'`);
+    const scanR = db.exec(`SELECT COUNT(*) FROM MEMBER_MINUTIAE_SCAN WHERE ID_MINUTIAE = 'min1'`);
+    expect(minR[0].values[0][0]).toBe(0);
+    expect(scanR[0].values[0][0]).toBe(0);
   });
 
   it('throws when no database is loaded', () => {

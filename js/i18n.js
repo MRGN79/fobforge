@@ -64,6 +64,7 @@ const strings = {
 
     // Confirmations
     'confirm.close':            'You have unsaved changes. Close anyway?',
+    'confirm.delete_badge':     'Remove this badge? This cannot be undone.',
 
     // Success messages
     'success.badge.added':      'Badge added successfully',
@@ -157,6 +158,7 @@ const strings = {
 
     // Confirmations
     'confirm.close':            'Tienes cambios sin guardar. ¿Cerrar igualmente?',
+    'confirm.delete_badge':     '¿Eliminar este badge? Esta acción no se puede deshacer.',
 
     // Success messages
     'success.badge.added':      'Badge añadido correctamente',

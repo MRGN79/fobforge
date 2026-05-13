@@ -30,8 +30,7 @@ const state = {
   contacts:    [],
   badges:      [],
   assignments: [],
-  rawXtz0:     null,
-  rawXtz1:     null,
+  prjCtx:      null,
 };
 
 // ---------------------------------------------------------------------------
@@ -104,8 +103,7 @@ export function handleNew() {
   state.loaded      = true;
   state.dirty       = false;
   state.fileName    = 'new_project.prj';
-  state.rawXtz0     = null;
-  state.rawXtz1     = null;
+  state.prjCtx      = null;
   setDirty(false);
   _refreshState();
 }
@@ -117,14 +115,13 @@ export async function handleFileLoad(arrayBuffer, fileName) {
   clearSearch();
 
   try {
-    const { dbBytes, rawXtz0, rawXtz1 } = await readPrj(arrayBuffer);
+    const { dbBytes, prjCtx } = await readPrj(arrayBuffer);
     loadDb(dbBytes);
 
     state.loaded   = true;
     state.dirty    = false;
     state.fileName = fileName || 'untitled.prj';
-    state.rawXtz0  = rawXtz0;
-    state.rawXtz1  = rawXtz1;
+    state.prjCtx   = prjCtx;
 
     setDirty(false);
     _refreshState();
@@ -303,8 +300,7 @@ export function handleClose() {
   state.contacts    = [];
   state.badges      = [];
   state.assignments = [];
-  state.rawXtz0     = null;
-  state.rawXtz1     = null;
+  state.prjCtx      = null;
   resetUI();
 }
 
@@ -317,8 +313,7 @@ export async function handleSave() {
     const dbBytes  = exportDb();
     const prjBytes = await writePrj({
       dbBytes,
-      rawXtz0: state.rawXtz0,
-      rawXtz1: state.rawXtz1,
+      prjCtx: state.prjCtx,
     });
 
     _downloadFile(prjBytes, state.fileName);

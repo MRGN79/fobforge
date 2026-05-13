@@ -11,8 +11,7 @@ describe('readPrj — real BTicino fixtures', () => {
     const result = await readPrj(buf.buffer);
 
     expect(result).toHaveProperty('dbBytes');
-    expect(result).toHaveProperty('rawXtz0');
-    expect(result).toHaveProperty('rawXtz1');
+    expect(result).toHaveProperty('prjCtx');
     expect(result.dbBytes).toBeInstanceOf(Uint8Array);
     expect(result.dbBytes.length).toBeGreaterThan(0);
 
@@ -26,8 +25,7 @@ describe('readPrj — real BTicino fixtures', () => {
     const result = await readPrj(buf.buffer);
 
     expect(result).toHaveProperty('dbBytes');
-    expect(result).toHaveProperty('rawXtz0');
-    expect(result).toHaveProperty('rawXtz1');
+    expect(result).toHaveProperty('prjCtx');
     expect(result.dbBytes).toBeInstanceOf(Uint8Array);
     expect(result.dbBytes.length).toBeGreaterThan(0);
 
@@ -38,27 +36,61 @@ describe('readPrj — real BTicino fixtures', () => {
 });
 
 describe('readPrj / writePrj round-trip — real fixtures', () => {
-  it('round-trips Empty_Project_3.2.13.prj preserving dbBytes and metadata', async () => {
+  it('round-trips Empty_Project_3.2.13.prj preserving dbBytes and all entries', async () => {
     const original = await readFile('tests/fixtures/Empty_Project_3.2.13.prj');
-    const { dbBytes: originalDb, rawXtz0, rawXtz1 } = await readPrj(original.buffer);
+    const { dbBytes: originalDb, prjCtx } = await readPrj(original.buffer);
 
     // Re-pack with the same content
-    const repacked = await writePrj({ dbBytes: originalDb, rawXtz0, rawXtz1 });
+    const repacked = await writePrj({ dbBytes: originalDb, prjCtx });
 
-    // Verify it reads back correctly
-    const { dbBytes: repackedDb } = await readPrj(repacked.buffer);
+    // Verify db reads back correctly
+    const { dbBytes: repackedDb, prjCtx: repackedCtx } = await readPrj(repacked.buffer);
     expect(repackedDb).toEqual(originalDb);
+
+    // Verify outer entry names and order are preserved
+    expect(repackedCtx.outerOrder.map(e => e.name)).toEqual(
+      prjCtx.outerOrder.map(e => e.name)
+    );
+
+    // Verify non-DCDB outer entries are byte-identical after round-trip
+    for (const orig of prjCtx.outerOrder.filter(e => e.data !== null)) {
+      const repacked = repackedCtx.outerOrder.find(e => e.name === orig.name);
+      expect(repacked?.data).toEqual(orig.data);
+    }
+
+    // Verify non-db3 DCDB entries (e.g. extra.xml) are byte-identical after round-trip
+    for (const orig of prjCtx.dcdbOrder.filter(e => e.data !== null)) {
+      const repacked = repackedCtx.dcdbOrder.find(e => e.name === orig.name);
+      expect(repacked?.data).toEqual(orig.data);
+    }
   });
 
-  it('round-trips Empty_Project_4.0.14.prj preserving dbBytes and metadata', async () => {
+  it('round-trips Empty_Project_4.0.14.prj preserving dbBytes and all entries', async () => {
     const original = await readFile('tests/fixtures/Empty_Project_4.0.14.prj');
-    const { dbBytes: originalDb, rawXtz0, rawXtz1 } = await readPrj(original.buffer);
+    const { dbBytes: originalDb, prjCtx } = await readPrj(original.buffer);
 
     // Re-pack with the same content
-    const repacked = await writePrj({ dbBytes: originalDb, rawXtz0, rawXtz1 });
+    const repacked = await writePrj({ dbBytes: originalDb, prjCtx });
 
-    // Verify it reads back correctly
-    const { dbBytes: repackedDb } = await readPrj(repacked.buffer);
+    // Verify db reads back correctly
+    const { dbBytes: repackedDb, prjCtx: repackedCtx } = await readPrj(repacked.buffer);
     expect(repackedDb).toEqual(originalDb);
+
+    // Verify outer entry names and order are preserved
+    expect(repackedCtx.outerOrder.map(e => e.name)).toEqual(
+      prjCtx.outerOrder.map(e => e.name)
+    );
+
+    // Verify non-DCDB outer entries are byte-identical after round-trip
+    for (const orig of prjCtx.outerOrder.filter(e => e.data !== null)) {
+      const repacked = repackedCtx.outerOrder.find(e => e.name === orig.name);
+      expect(repacked?.data).toEqual(orig.data);
+    }
+
+    // Verify non-db3 DCDB entries (e.g. extra.xml) are byte-identical after round-trip
+    for (const orig of prjCtx.dcdbOrder.filter(e => e.data !== null)) {
+      const repacked = repackedCtx.dcdbOrder.find(e => e.name === orig.name);
+      expect(repacked?.data).toEqual(orig.data);
+    }
   });
 });

@@ -233,9 +233,9 @@ describe('readEntry — CRC and flag branches', () => {
 // ---------------------------------------------------------------------------
 
 describe('readPrj / writePrj round-trip', () => {
-  it('preserves dbBytes through write-then-read', async () => {
+  it('preserves dbBytes through write-then-read (minimal prj, no prjCtx)', async () => {
     const original = new TextEncoder().encode('mock sqlite payload');
-    const prjBytes = await writePrj({ dbBytes: original, rawXtz0: null, rawXtz1: null });
+    const prjBytes = await writePrj({ dbBytes: original, prjCtx: null });
 
     expect(prjBytes).toBeInstanceOf(Uint8Array);
     expect(prjBytes.length).toBeGreaterThan(0);
@@ -244,29 +244,51 @@ describe('readPrj / writePrj round-trip', () => {
     expect(dbBytes).toEqual(original);
   });
 
-  it('round-trips with rawXtz0 present', async () => {
-    const dbBytes  = new TextEncoder().encode('db');
-    const rawXtz0  = new TextEncoder().encode('xtz0 payload');
-    const prjBytes = await writePrj({ dbBytes, rawXtz0, rawXtz1: null });
+  it('preserves outer entries beyond DCDB.xtz in original order', async () => {
+    const dbBytes    = new TextEncoder().encode('db');
+    const xtz0data   = new TextEncoder().encode('xtz0 payload');
+    const xtz1data   = new TextEncoder().encode('xtz1 payload');
+    const prjCtx = {
+      outerOrder: [
+        { name: '0.xtz',    data: xtz0data },
+        { name: 'DCDB.xtz', data: null },
+        { name: '1.xtz',    data: xtz1data },
+      ],
+      dcdbOrder: [{ name: 'DCDB/Device_contacts.db3', data: null }],
+    };
+    const prjBytes = await writePrj({ dbBytes, prjCtx });
     const result   = await readPrj(prjBytes.buffer);
+
     expect(result.dbBytes).toEqual(dbBytes);
-    expect(result.rawXtz0).toEqual(rawXtz0);
+    const names = result.prjCtx.outerOrder.map(e => e.name);
+    expect(names).toEqual(['0.xtz', 'DCDB.xtz', '1.xtz']);
+    expect(result.prjCtx.outerOrder.find(e => e.name === '0.xtz').data).toEqual(xtz0data);
+    expect(result.prjCtx.outerOrder.find(e => e.name === '1.xtz').data).toEqual(xtz1data);
   });
 
-  it('round-trips with rawXtz1 present', async () => {
-    const dbBytes  = new TextEncoder().encode('db');
-    const rawXtz1  = new TextEncoder().encode('xtz1 payload');
-    const prjBytes = await writePrj({ dbBytes, rawXtz0: null, rawXtz1 });
+  it('preserves non-db3 entries inside DCDB.xtz (e.g. extra.xml)', async () => {
+    const dbBytes    = new TextEncoder().encode('db');
+    const xmlPayload = new TextEncoder().encode('<extra>test</extra>');
+    const prjCtx = {
+      outerOrder: [{ name: 'DCDB.xtz', data: null }],
+      dcdbOrder: [
+        { name: 'DCDB/Device_contacts.db3', data: null },
+        { name: 'DCDB/extra.xml',           data: xmlPayload },
+      ],
+    };
+    const prjBytes = await writePrj({ dbBytes, prjCtx });
     const result   = await readPrj(prjBytes.buffer);
+
     expect(result.dbBytes).toEqual(dbBytes);
-    expect(result.rawXtz1).toEqual(rawXtz1);
+    const xml = result.prjCtx.dcdbOrder.find(e => e.name === 'DCDB/extra.xml');
+    expect(xml?.data).toEqual(xmlPayload);
   });
 
   it('round-trips large compressible data (exercises deflate → inflate path)', async () => {
     // 1 080 bytes of repeated text compress well → buildZip picks method=8 for
     // the inner .db3 entry → readEntry calls inflate, covering that branch.
     const dbBytes  = new TextEncoder().encode('FobForge-'.repeat(120));
-    const prjBytes = await writePrj({ dbBytes, rawXtz0: null, rawXtz1: null });
+    const prjBytes = await writePrj({ dbBytes, prjCtx: null });
     const result   = await readPrj(prjBytes.buffer);
     expect(result.dbBytes).toEqual(dbBytes);
   });
