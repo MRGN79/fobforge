@@ -394,7 +394,11 @@ export function renderContacts(state) {
 
   if (!state.contacts.length) {
     contactList.innerHTML = `
-      <p class="contact-list__empty" data-i18n="contacts.empty"></p>
+      <div class="contact-list__empty">
+        <p data-i18n="contacts.empty"></p>
+        <button class="btn btn--primary btn--sm" data-action="add-contact"
+                data-i18n="contacts.add"></button>
+      </div>
     `;
     _applyI18n();
     _syncPanel(state);
@@ -758,11 +762,12 @@ function _bindBadgeFormEvents(panel) {
 
 function _bindAddContactButton() {
   document.addEventListener('click', e => {
-    if (e.target.id === 'btn-add-contact' || e.target.closest('#btn-add-contact')) {
+    if (e.target.id === 'btn-add-contact' || e.target.closest('#btn-add-contact') ||
+        e.target.dataset.action === 'add-contact') {
       const wrap = document.getElementById('add-contact-wrap');
       if (!wrap) return;
-      wrap.hidden = !wrap.hidden;
-      if (!wrap.hidden) wrap.querySelector('input')?.focus();
+      wrap.hidden = false;
+      wrap.querySelector('input')?.focus();
       return;
     }
     if (e.target.id === 'btn-cancel-add-contact') {
