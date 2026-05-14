@@ -789,22 +789,31 @@ function _bindNoFobFilter() {
   });
 }
 
+function _exitBulkMode() {
+  _bulkMode = false;
+  _bulkSelected.clear();
+  const btn = document.getElementById('btn-bulk-select');
+  if (btn) {
+    btn.textContent = t('contacts.bulk_select');
+    btn.classList.remove('btn--filter-active');
+  }
+  const bar = document.getElementById('bulk-bar');
+  if (bar) bar.hidden = true;
+  if (_currentState) renderContacts(_currentState);
+}
+
 // F — bulk mode toggle + bulk actions
 function _bindBulkMode() {
   document.addEventListener('click', e => {
     // Toggle bulk mode on/off
     if (e.target.closest('#btn-bulk-select')) {
-      _bulkMode = !_bulkMode;
-      _bulkSelected.clear();
+      if (_bulkMode) { _exitBulkMode(); return; }
+      _bulkMode = true;
       const btn = document.getElementById('btn-bulk-select');
       if (btn) {
-        btn.textContent = _bulkMode
-          ? t('contacts.bulk_cancel')
-          : t('contacts.bulk_select');
-        btn.classList.toggle('btn--filter-active', _bulkMode);
+        btn.textContent = t('contacts.bulk_cancel');
+        btn.classList.add('btn--filter-active');
       }
-      const bar = document.getElementById('bulk-bar');
-      if (bar) bar.hidden = true;
       if (_currentState) renderContacts(_currentState);
       return;
     }
@@ -815,7 +824,8 @@ function _bindBulkMode() {
       if (!n) return;
       if (!window.confirm(_fmt('confirm.bulk_delete', { n }))) return;
       const result = _callbacks.onBulkDelete({ memberIds: [..._bulkSelected] });
-      if (!result?.ok) showSystemError('error.save');
+      if (!result?.ok) { showSystemError('error.save'); return; }
+      _exitBulkMode();
       return;
     }
 
@@ -835,6 +845,8 @@ function _bindBulkMode() {
         showSystemError(result?.error ?? 'error.save');
       } else {
         uidInput.value = '';
+        _bulkSelected.clear();
+        _updateBulkBar();
       }
       return;
     }
