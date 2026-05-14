@@ -965,6 +965,34 @@ body {
    Stats link
 --------------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   Stats link
+--------------------------------------------------------------------------- */
+
+.stats-link {
+  position:       fixed;
+  bottom:         24px;
+  left:           24px;
+  z-index:        200;
+  width:          32px;
+  height:         32px;
+  background:     var(--color-surface-2);
+  border:         1px solid var(--color-border);
+  border-radius:  var(--radius-sm);
+  display:        flex;
+  align-items:    center;
+  justify-content: center;
+  font-size:      16px;
+  cursor:         pointer;
+  transition:     border-color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+
+.stats-link:hover {
+  border-color: var(--color-accent);
+  background:   color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
 .stats-link:focus-visible {
   outline:        2px solid var(--color-accent);
   outline-offset: 2px;
