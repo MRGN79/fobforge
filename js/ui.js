@@ -66,6 +66,16 @@ export function initUI(callbacks) {
   _bindSearchInput();
   _bindAddContactButton();
   _bindThemeToggle();
+  _bindBeforeUnload();
+}
+
+function _bindBeforeUnload() {
+  window.addEventListener('beforeunload', e => {
+    if (_isDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
