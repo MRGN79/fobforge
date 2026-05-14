@@ -9,6 +9,12 @@ const STORAGE_KEY = 'fobforge_lang';
 
 const strings = {
   en: {
+    // Accessibility
+    'a11y.skip':                'Skip to main content',
+    'a11y.theme.toggle':        'Switch theme',
+    'a11y.theme.dark':          'Dark',
+    'a11y.theme.light':         'Light',
+
     // App
     'app.title':                'FobForge',
     'app.subtitle':             'RFID Badge Manager for BTicino Sfera .prj files',
@@ -110,6 +116,12 @@ const strings = {
   },
 
   es: {
+    // Accessibility
+    'a11y.skip':                'Saltar al contenido principal',
+    'a11y.theme.toggle':        'Cambiar tema',
+    'a11y.theme.dark':          'Oscuro',
+    'a11y.theme.light':         'Claro',
+
     // App
     'app.title':                'FobForge',
     'app.subtitle':             'Gestor de badges RFID para ficheros .prj de BTicino Sfera',

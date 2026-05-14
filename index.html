@@ -67,6 +67,16 @@
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+  <!-- Anti-flash: apply saved theme before first paint -->
+  <script>
+    (function () {
+      var saved = localStorage.getItem('fobforge_theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'light' || (saved === null && !prefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 
   <!-- Loading screen — visible before JS takes over -->
   <div id="loading-screen" style="
@@ -103,6 +113,12 @@
     border-top: 1px solid #333;
     display: none;
   "></div>
+
+  <!-- Skip navigation — visible on keyboard focus only -->
+  <a href="#main-content" class="skip-link" data-i18n="a11y.skip"></a>
+
+  <!-- Visually-hidden page title for screen readers -->
+  <h1 class="visually-hidden">FobForge — RFID Badge Manager</h1>
 
   <!-- App mounts here -->
   <div id="app"></div>

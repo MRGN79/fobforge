@@ -65,6 +65,7 @@ export function initUI(callbacks) {
   _bindApartmentRemoveButton();
   _bindSearchInput();
   _bindAddContactButton();
+  _bindThemeToggle();
 }
 
 // ---------------------------------------------------------------------------
@@ -86,6 +87,8 @@ function _renderShell() {
            rel="noopener noreferrer"
            data-i18n-title="feedback.title"
            data-i18n="feedback.link"></a>
+        <button id="btn-theme" class="theme-toggle"
+                data-i18n-aria-label="a11y.theme.toggle">🌙</button>
         <select id="lang-selector" class="lang-selector">
           <option value="en" data-i18n="lang.en"></option>
           <option value="es" data-i18n="lang.es"></option>
@@ -103,7 +106,7 @@ function _renderShell() {
       <span data-i18n="disclaimer.text"></span>
     </div>
 
-    <main class="layout">
+    <main class="layout" id="main-content">
 
       <section class="panel panel--left">
         <div class="panel__header">
@@ -117,6 +120,7 @@ function _renderShell() {
                  id="contact-search"
                  class="search-input"
                  data-i18n-placeholder="contacts.search"
+                 data-i18n-aria-label="contacts.search"
                  autocomplete="off">
         </div>
 
@@ -126,15 +130,17 @@ function _renderShell() {
               <label class="form-label" for="new-contact-name"
                      data-i18n="contacts.name"></label>
               <input class="form-input" type="text" id="new-contact-name"
-                     name="name" autocomplete="off">
-              <span class="form-error" id="error-new-name" hidden></span>
+                     name="name" autocomplete="off"
+                     aria-describedby="error-new-name">
+              <span class="form-error" id="error-new-name" hidden role="alert"></span>
             </div>
             <div class="form-group">
               <label class="form-label" for="new-contact-surname"
                      data-i18n="contacts.surname"></label>
               <input class="form-input" type="text" id="new-contact-surname"
-                     name="surname" autocomplete="off">
-              <span class="form-error" id="error-new-surname" hidden></span>
+                     name="surname" autocomplete="off"
+                     aria-describedby="error-new-surname">
+              <span class="form-error" id="error-new-surname" hidden role="alert"></span>
             </div>
             <div class="form-group form-group--actions">
               <button type="submit" class="btn btn--primary btn--sm"
@@ -172,7 +178,7 @@ function _renderShell() {
     <div id="drag-overlay" class="drag-overlay" hidden>
       <span data-i18n="file.drop"></span>
     </div>
-    <div id="toast" class="toast" hidden></div>
+    <div id="toast-region" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="loading" class="loading" hidden>
       <span data-i18n="app.loading"></span>
     </div>
@@ -198,6 +204,10 @@ function _applyI18n() {
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.title = t(el.dataset.i18nTitle);
   });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
+  });
+  _updateThemeButton();
 }
 
 function _syncLangSelector() {
@@ -541,15 +551,17 @@ function _renderBadgePanel(panel, state) {
             <label class="form-label" for="edit-contact-name"
                    data-i18n="contacts.name"></label>
             <input class="form-input" type="text" id="edit-contact-name"
-                   name="name" value="${_esc(contact.name)}" autocomplete="off">
-            <span class="form-error" id="error-edit-name" hidden></span>
+                   name="name" value="${_esc(contact.name)}" autocomplete="off"
+                   aria-describedby="error-edit-name">
+            <span class="form-error" id="error-edit-name" hidden role="alert"></span>
           </div>
           <div class="form-group">
             <label class="form-label" for="edit-contact-surname"
                    data-i18n="contacts.surname"></label>
             <input class="form-input" type="text" id="edit-contact-surname"
-                   name="surname" value="${_esc(contact.surname)}" autocomplete="off">
-            <span class="form-error" id="error-edit-surname" hidden></span>
+                   name="surname" value="${_esc(contact.surname)}" autocomplete="off"
+                   aria-describedby="error-edit-surname">
+            <span class="form-error" id="error-edit-surname" hidden role="alert"></span>
           </div>
           <div class="form-group form-group--actions">
             <button type="submit" class="btn btn--primary btn--sm"
@@ -621,8 +633,9 @@ function _renderBadgePanel(panel, state) {
                    data-i18n="apartments.scsaddr"></label>
             <input class="form-input form-input--mono" type="number"
                    id="apt-scsaddr" name="scsAddr"
-                   min="0" max="9999" autocomplete="off">
-            <span class="form-error" id="error-apt-scsaddr" hidden></span>
+                   min="0" max="9999" autocomplete="off"
+                   aria-describedby="error-apt-scsaddr">
+            <span class="form-error" id="error-apt-scsaddr" hidden role="alert"></span>
           </div>
           <div class="form-group form-group--actions">
             <button type="submit" class="btn btn--primary"
@@ -685,8 +698,9 @@ function _renderBadgePanel(panel, state) {
                    name="uid"
                    maxlength="8"
                    autocomplete="off"
-                   placeholder="A1B2C3D4">
-            <span class="form-error" id="error-uid" hidden></span>
+                   placeholder="A1B2C3D4"
+                   aria-describedby="error-uid">
+            <span class="form-error" id="error-uid" hidden role="alert"></span>
           </div>
 
           <div class="form-group">
@@ -713,7 +727,7 @@ function _renderBadgePanel(panel, state) {
           <div class="form-group form-group--actions">
             <button type="submit" class="btn btn--primary"
                     data-i18n="badges.add"></button>
-            <span class="form-error" id="error-assign" hidden></span>
+            <span class="form-error" id="error-assign" hidden role="alert"></span>
           </div>
 
         </form>
@@ -963,13 +977,11 @@ export function showSystemError(key) {
 }
 
 function _showToast(message, modifier) {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
-  toast.textContent = message;
-  toast.className   = `toast ${modifier}`;
-  toast.hidden      = false;
+  const region = document.getElementById('toast-region');
+  if (!region) return;
+  region.innerHTML = `<div class="toast ${modifier}">${_esc(message)}</div>`;
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => { toast.hidden = true; }, 3500);
+  _toastTimer = setTimeout(() => { region.innerHTML = ''; }, 3500);
 }
 
 // ---------------------------------------------------------------------------
@@ -1012,4 +1024,34 @@ function _esc(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ---------------------------------------------------------------------------
+// Theme toggle
+// ---------------------------------------------------------------------------
+
+function _bindThemeToggle() {
+  const btn = document.getElementById('btn-theme');
+  if (!btn) return;
+  _updateThemeButton();
+  btn.addEventListener('click', () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('fobforge_theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('fobforge_theme', 'light');
+    }
+    _updateThemeButton();
+  });
+}
+
+function _updateThemeButton() {
+  const btn = document.getElementById('btn-theme');
+  if (!btn) return;
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  btn.textContent = isLight ? '🌙' : '☀️';
+  btn.setAttribute('aria-label', t(isLight ? 'a11y.theme.dark' : 'a11y.theme.light'));
+  btn.title = t(isLight ? 'a11y.theme.dark' : 'a11y.theme.light');
 }
