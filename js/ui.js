@@ -29,6 +29,7 @@ let _selectedMemberId = null;
 
 // Active search query for the contact list
 let _searchQuery = '';
+let _searchDebounceTimer = null;
 
 // Tracks unsaved changes — set externally via setDirty()
 let _isDirty = false;
@@ -346,7 +347,10 @@ function _bindSearchInput() {
   document.addEventListener('input', e => {
     if (e.target.id !== 'contact-search') return;
     _searchQuery = e.target.value;
-    if (_currentState) renderContacts(_currentState);
+    clearTimeout(_searchDebounceTimer);
+    _searchDebounceTimer = setTimeout(() => {
+      if (_currentState) renderContacts(_currentState);
+    }, 120);
   });
 }
 
@@ -458,10 +462,15 @@ export function renderContacts(state) {
     return;
   }
 
+  const badgeCountMap = new Map();
+  state.assignments.forEach(a =>
+    badgeCountMap.set(a.memberId, (badgeCountMap.get(a.memberId) ?? 0) + 1)
+  );
+
+  const prevScrollTop = contactList.scrollTop;
+
   contactList.innerHTML = filtered.map(contact => {
-    const badgeCount = state.assignments.filter(
-      a => a.memberId === contact.id
-    ).length;
+    const badgeCount = badgeCountMap.get(contact.id) ?? 0;
 
     const isSelected = contact.id === _selectedMemberId;
     const initials   = _initials(contact.name, contact.surname);
@@ -488,6 +497,14 @@ export function renderContacts(state) {
   }).join('');
 
   _applyI18n();
+
+  const activeItem = contactList.querySelector('.contact-item--active');
+  if (activeItem) {
+    activeItem.scrollIntoView({ block: 'nearest' });
+  } else {
+    contactList.scrollTop = prevScrollTop;
+  }
+
   _syncPanel(state);
 }
 
