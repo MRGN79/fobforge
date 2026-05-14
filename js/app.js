@@ -59,13 +59,6 @@ export async function bootstrap() {
     return;
   }
 
-  window.addEventListener('beforeunload', e => {
-    if (state.loaded && state.dirty) {
-      e.preventDefault();
-      return '';
-    }
-  });
-
   initUI({
     onFileLoad:        handleFileLoad,
     onAddBadge:        handleAddBadge,
@@ -253,7 +246,8 @@ export function handleDeleteContact({ memberId }) {
 
 export function handleAddApartment({ memberId, apt, scsAddr, block, floor }) {
   apt = (apt ?? '').trim();
-  scsAddr = scsAddr ? parseInt(scsAddr, 10) : '';
+  scsAddr = scsAddr ? parseInt(scsAddr, 10) : 0;
+  if (isNaN(scsAddr)) scsAddr = 0;
   block = (block ?? '').trim();
   floor = (floor ?? '').trim();
 

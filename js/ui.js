@@ -196,6 +196,7 @@ function _renderShell() {
 
   _applyI18n();
   _syncLangSelector();
+  _bindContactListEvents();
 }
 
 // ---------------------------------------------------------------------------
@@ -486,20 +487,31 @@ export function renderContacts(state) {
     `;
   }).join('');
 
-  // Bind contact click and keyboard events
-  contactList.querySelectorAll('.contact-item').forEach(el => {
-    const select = () => {
-      _selectedMemberId = el.dataset.memberId;
-      renderContacts(_currentState);
-    };
-    el.addEventListener('click', select);
-    el.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
-    });
-  });
-
   _applyI18n();
   _syncPanel(state);
+}
+
+// Bind contact list delegation — attach once, not per render
+function _bindContactListEvents() {
+  const contactList = document.getElementById('contact-list');
+  if (!contactList || contactList._delegated) return; // Attach only once
+  contactList._delegated = true;
+
+  contactList.addEventListener('click', e => {
+    const item = e.target.closest('.contact-item');
+    if (!item) return;
+    _selectedMemberId = item.dataset.memberId;
+    renderContacts(_currentState);
+  });
+
+  contactList.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const item = e.target.closest('.contact-item');
+    if (!item) return;
+    e.preventDefault();
+    _selectedMemberId = item.dataset.memberId;
+    renderContacts(_currentState);
+  });
 }
 
 function _syncPanel(state) {
