@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mrgn79.github.io/fobforge/sitemap.xml

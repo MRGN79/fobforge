@@ -99,6 +99,10 @@ function _renderShell() {
       </div>
     </header>
 
+    <div class="disclaimer-bar">
+      <span data-i18n="disclaimer.text"></span>
+    </div>
+
     <main class="layout">
 
       <section class="panel panel--left">

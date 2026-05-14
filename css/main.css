@@ -27,6 +27,7 @@
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
 
   --header-height: 56px;
+  --disclaimer-height: 30px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -148,13 +149,39 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   Disclaimer bar
+--------------------------------------------------------------------------- */
+
+.disclaimer-bar {
+  height:          var(--disclaimer-height);
+  background:      #1a1200;
+  border-bottom:   1px solid #3d2e00;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         0 24px;
+  position:        sticky;
+  top:             var(--header-height);
+  z-index:         99;
+}
+
+.disclaimer-bar span {
+  font-size:      11px;
+  color:          #a07020;
+  text-align:     center;
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+}
+
+/* ---------------------------------------------------------------------------
    Layout
 --------------------------------------------------------------------------- */
 
 .layout {
   display:     grid;
   grid-template-columns: 300px 1fr;
-  height:      calc(100vh - var(--header-height));
+  height:      calc(100vh - var(--header-height) - var(--disclaimer-height));
   overflow:    hidden;
 }
 

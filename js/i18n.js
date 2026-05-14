@@ -91,6 +91,9 @@ const strings = {
     'feedback.link':            'Feedback',
     'feedback.title':           'Report a bug or suggest a feature',
 
+    // Disclaimer
+    'disclaimer.text':          '⚠ FobForge modifies .prj files directly. Always back up your files before use. The author is not liable for any data loss or corruption.',
+
     // Apartment management
     'apartments.title':         'Apartments',
     'apartments.empty':         'No apartments assigned',
@@ -188,6 +191,9 @@ const strings = {
     // Feedback
     'feedback.link':            'Feedback',
     'feedback.title':           'Reportar un error o sugerir una mejora',
+
+    // Disclaimer
+    'disclaimer.text':          '⚠ FobForge modifica ficheros .prj directamente. Realiza siempre una copia de seguridad antes de usar la herramienta. El autor no se hace responsable de pérdidas de datos ni corrupciones.',
 
     // Apartment management
     'apartments.title':         'Apartamentos',
