@@ -113,6 +113,32 @@ const strings = {
     'success.apartment.updated': 'Apartment updated',
     'success.apartment.deleted': 'Apartment removed',
     'confirm.delete_apartment': 'Remove this apartment?',
+
+    // Sort & filter
+    'contacts.sort.name_asc':   'Name A→Z',
+    'contacts.sort.name_desc':  'Name Z→A',
+    'contacts.sort.fobs_desc':  'Most fobs',
+    'contacts.sort.fobs_asc':   'Fewest fobs',
+    'contacts.filter.nofob':    'No fob',
+
+    // Stats & counter
+    'contacts.stats.contacts':    'contacts',
+    'contacts.stats.with_fob':    'with fob',
+    'contacts.stats.without_fob': 'without fob',
+    'contacts.stats.unassigned':  'unassigned fobs',
+    'contacts.showing_filtered':  'Showing {shown} of {total}',
+    'contacts.showing_all':       '{total} contacts',
+
+    // Bulk mode
+    'contacts.bulk_select':     'Select',
+    'contacts.bulk_cancel':     'Cancel',
+    'contacts.bulk_n_selected': '{n} selected',
+    'contacts.bulk_assign':     'Assign badge',
+    'contacts.bulk_delete_btn': 'Delete',
+    'confirm.bulk_delete':      'Delete {n} contacts? All their badges will be removed.',
+    'success.bulk_deleted':     '{n} contacts deleted',
+    'success.bulk_assigned':    'Badge assigned to {n} contacts',
+    'error.bulk_uid':           'Enter a valid 8-char UID',
   },
 
   es: {
@@ -220,6 +246,32 @@ const strings = {
     'success.apartment.updated': 'Apartamento actualizado',
     'success.apartment.deleted': 'Apartamento eliminado',
     'confirm.delete_apartment': '¿Eliminar este apartamento?',
+
+    // Sort & filter
+    'contacts.sort.name_asc':   'Nombre A→Z',
+    'contacts.sort.name_desc':  'Nombre Z→A',
+    'contacts.sort.fobs_desc':  'Más fobs',
+    'contacts.sort.fobs_asc':   'Menos fobs',
+    'contacts.filter.nofob':    'Sin fob',
+
+    // Stats & counter
+    'contacts.stats.contacts':    'contactos',
+    'contacts.stats.with_fob':    'con fob',
+    'contacts.stats.without_fob': 'sin fob',
+    'contacts.stats.unassigned':  'fobs sin asignar',
+    'contacts.showing_filtered':  'Mostrando {shown} de {total}',
+    'contacts.showing_all':       '{total} contactos',
+
+    // Bulk mode
+    'contacts.bulk_select':     'Seleccionar',
+    'contacts.bulk_cancel':     'Cancelar',
+    'contacts.bulk_n_selected': '{n} seleccionados',
+    'contacts.bulk_assign':     'Asignar fob',
+    'contacts.bulk_delete_btn': 'Eliminar',
+    'confirm.bulk_delete':      '¿Eliminar {n} contactos? Se eliminarán todos sus badges.',
+    'success.bulk_deleted':     '{n} contactos eliminados',
+    'success.bulk_assigned':    'Fob asignado a {n} contactos',
+    'error.bulk_uid':           'Introduce un UID válido de 8 caracteres',
   }
 };
 

@@ -868,6 +868,180 @@ body {
   min-height: 28px;
 }
 
+.btn--filter {
+  font-size:   11px;
+  padding:     4px 10px;
+  min-height:  26px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn--filter-active {
+  background:   color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-color: var(--color-accent);
+  color:        var(--color-accent);
+}
+
+/* ---------------------------------------------------------------------------
+   Panel header actions
+--------------------------------------------------------------------------- */
+
+.panel__header-actions {
+  display:     flex;
+  gap:         6px;
+  align-items: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Contact stats bar
+--------------------------------------------------------------------------- */
+
+.contact-stats {
+  padding:        5px 12px;
+  font-family:    var(--font-mono);
+  font-size:      10px;
+  color:          var(--color-muted);
+  border-bottom:  1px solid var(--color-border);
+  flex-shrink:    0;
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+}
+
+/* ---------------------------------------------------------------------------
+   List controls (sort + filter row)
+--------------------------------------------------------------------------- */
+
+.list-controls {
+  display:     flex;
+  gap:         6px;
+  margin-top:  6px;
+  align-items: center;
+}
+
+.sort-select {
+  flex:          1;
+  background:    var(--color-surface-2);
+  border:        1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color:         var(--color-text);
+  font-family:   var(--font-sans);
+  font-size:     11px;
+  padding:       4px 6px;
+  cursor:        pointer;
+  min-width:     0;
+}
+
+.sort-select:focus {
+  outline:      none;
+  border-color: var(--color-accent);
+}
+
+.contact-counter {
+  margin-top:  4px;
+  font-family: var(--font-mono);
+  font-size:   10px;
+  color:       var(--color-muted);
+  text-align:  right;
+}
+
+/* ---------------------------------------------------------------------------
+   Alphabetical dividers
+--------------------------------------------------------------------------- */
+
+.alpha-divider {
+  padding:        6px 20px 2px;
+  font-family:    var(--font-mono);
+  font-size:      10px;
+  font-weight:    600;
+  color:          var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-top:     1px solid var(--color-border);
+}
+
+.alpha-divider:first-child {
+  border-top: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Bulk selection
+--------------------------------------------------------------------------- */
+
+.bulk-checkbox {
+  width:       14px;
+  height:      14px;
+  flex-shrink: 0;
+  cursor:      pointer;
+  accent-color: var(--color-accent);
+  pointer-events: none;
+}
+
+.contact-item--checked {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.contact-item--checked .contact-item__avatar {
+  border-color: var(--color-accent);
+  color:        var(--color-accent);
+}
+
+/* ---------------------------------------------------------------------------
+   Bulk action bar
+--------------------------------------------------------------------------- */
+
+.bulk-bar {
+  border-top:  1px solid var(--color-border);
+  background:  var(--color-surface);
+  padding:     8px 12px;
+  display:     flex;
+  flex-direction: column;
+  gap:         6px;
+  flex-shrink: 0;
+}
+
+.bulk-bar[hidden] {
+  display: none;
+}
+
+.bulk-bar__row {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+}
+
+.bulk-bar__row--info {
+  justify-content: space-between;
+}
+
+.bulk-bar__row--assign {
+  gap: 4px;
+}
+
+.bulk-bar__count {
+  font-family: var(--font-mono);
+  font-size:   11px;
+  color:       var(--color-accent);
+  font-weight: 500;
+}
+
+.bulk-uid-input {
+  width:     80px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding:   4px 6px;
+  min-height: 26px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.bulk-type-select {
+  flex: 1;
+  font-size:  11px;
+  padding:    4px 6px;
+  min-height: 26px;
+}
+
 /* ---------------------------------------------------------------------------
    Toast notifications
 --------------------------------------------------------------------------- */

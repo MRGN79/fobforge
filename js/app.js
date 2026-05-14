@@ -4,7 +4,7 @@
 // No DOM manipulation here — that lives in ui.js.
 // No file I/O here — that lives in prj.js and db.js.
 
-import { initI18n }                                                    from './i18n.js';
+import { initI18n, t }                                                 from './i18n.js';
 import { validateUID, validateAssignment, validateMemberName, validateMemberSurname, validateApartmentScsAddr } from './validate.js';
 import { readPrj, writePrj }                                           from './prj.js';
 import {
@@ -71,6 +71,8 @@ export async function bootstrap() {
     onDeleteContact:   handleDeleteContact,
     onAddApartment:    handleAddApartment,
     onRemoveApartment: handleRemoveApartment,
+    onBulkDelete:      handleBulkDelete,
+    onBulkAssign:      handleBulkAssign,
   });
 
   return true;
@@ -282,6 +284,61 @@ export function handleRemoveApartment({ memberId, aptId }) {
   state.dirty = true;
   setDirty(true);
   _refreshState();
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Handlers
+// ---------------------------------------------------------------------------
+
+export function handleBulkDelete({ memberIds }) {
+  if (!memberIds.length) return { ok: false };
+  try {
+    memberIds.forEach(id => deleteContact(id));
+  } catch (e) {
+    console.error(e);
+    return { ok: false };
+  }
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  const msg = t('success.bulk_deleted').replace('{n}', memberIds.length);
+  showSuccess(msg);
+  return { ok: true };
+}
+
+export function handleBulkAssign({ memberIds, uid, type }) {
+  if (!memberIds.length) return { ok: false };
+  uid = uid.trim().toUpperCase();
+
+  const uidResult = validateUID(uid, state.badges);
+  const badgeExists = state.badges.some(b => b.id === uid || b.uid === uid);
+
+  try {
+    if (!badgeExists) {
+      if (!uidResult.valid) return { ok: false, error: uidResult.error };
+      addBadge(uid, type, '');
+    }
+    let assigned = 0;
+    memberIds.forEach(memberId => {
+      const alreadyAssigned = state.assignments.some(
+        a => a.memberId === memberId && (a.badgeId === uid || a.uid === uid)
+      );
+      if (!alreadyAssigned) {
+        assignBadge(memberId, uid);
+        assigned++;
+      }
+    });
+    if (assigned === 0) return { ok: false, error: 'error.badge.assigned' };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, error: 'error.save' };
+  }
+  state.dirty = true;
+  setDirty(true);
+  _refreshState();
+  const msg = t('success.bulk_assigned').replace('{n}', memberIds.length);
+  showSuccess(msg);
   return { ok: true };
 }
 

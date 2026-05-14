@@ -22,6 +22,8 @@ let _callbacks = {
   onDeleteContact:   null,
   onAddApartment:    null,
   onRemoveApartment: null,
+  onBulkDelete:      null,
+  onBulkAssign:      null,
 };
 
 // Current selected contact ID
@@ -30,6 +32,19 @@ let _selectedMemberId = null;
 // Active search query for the contact list
 let _searchQuery = '';
 let _searchDebounceTimer = null;
+
+// Sort order: 'name-asc' | 'name-desc' | 'fobs-desc' | 'fobs-asc'
+let _sortOrder = 'name-asc';
+
+// Filter: show only contacts without any fob
+let _filterNoFob = false;
+
+// Bulk selection mode
+let _bulkMode = false;
+let _bulkSelected = new Set();
+
+// Focus the active contact item after the next render (keyboard nav)
+let _focusAfterRender = false;
 
 // Tracks unsaved changes — set externally via setDirty()
 let _isDirty = false;
@@ -65,6 +80,9 @@ export function initUI(callbacks) {
   _bindRemoveButton();
   _bindApartmentRemoveButton();
   _bindSearchInput();
+  _bindSortSelect();
+  _bindNoFobFilter();
+  _bindBulkMode();
   _bindAddContactButton();
   _bindThemeToggle();
   _bindBeforeUnload();
@@ -122,9 +140,15 @@ function _renderShell() {
       <section class="panel panel--left">
         <div class="panel__header">
           <span class="panel__title" data-i18n="contacts.title"></span>
-          <button id="btn-add-contact" class="btn btn--sm" hidden
-                  data-i18n="contacts.add"></button>
+          <div class="panel__header-actions">
+            <button id="btn-bulk-select" class="btn btn--sm" hidden
+                    data-i18n="contacts.bulk_select"></button>
+            <button id="btn-add-contact" class="btn btn--sm" hidden
+                    data-i18n="contacts.add"></button>
+          </div>
         </div>
+
+        <div id="contact-stats" class="contact-stats" hidden></div>
 
         <div id="search-bar" class="search-bar" hidden>
           <input type="search"
@@ -133,6 +157,17 @@ function _renderShell() {
                  data-i18n-placeholder="contacts.search"
                  data-i18n-aria-label="contacts.search"
                  autocomplete="off">
+          <div class="list-controls">
+            <select id="sort-select" class="sort-select">
+              <option value="name-asc"  data-i18n="contacts.sort.name_asc"></option>
+              <option value="name-desc" data-i18n="contacts.sort.name_desc"></option>
+              <option value="fobs-desc" data-i18n="contacts.sort.fobs_desc"></option>
+              <option value="fobs-asc"  data-i18n="contacts.sort.fobs_asc"></option>
+            </select>
+            <button id="btn-filter-nofob" class="btn btn--sm btn--filter"
+                    data-i18n="contacts.filter.nofob"></button>
+          </div>
+          <div id="contact-counter" class="contact-counter"></div>
         </div>
 
         <div id="add-contact-wrap" class="add-contact-wrap" hidden>
@@ -175,6 +210,26 @@ function _renderShell() {
         </div>
 
         <div id="contact-list" class="contact-list" hidden></div>
+
+        <div id="bulk-bar" class="bulk-bar" hidden>
+          <div class="bulk-bar__row bulk-bar__row--info">
+            <span id="bulk-count" class="bulk-bar__count"></span>
+            <button id="btn-bulk-delete" class="btn btn--sm btn--danger"
+                    data-i18n="contacts.bulk_delete_btn"></button>
+          </div>
+          <div class="bulk-bar__row bulk-bar__row--assign">
+            <input type="text" id="bulk-uid-input" class="form-input bulk-uid-input"
+                   maxlength="8" placeholder="UID" autocomplete="off"
+                   aria-label="Badge UID">
+            <select id="bulk-type-select" class="sort-select bulk-type-select">
+              <option value="0" data-i18n="badges.type.0"></option>
+              <option value="1" data-i18n="badges.type.1"></option>
+              <option value="2" data-i18n="badges.type.2"></option>
+            </select>
+            <button id="btn-bulk-assign" class="btn btn--sm btn--primary"
+                    data-i18n="contacts.bulk_assign"></button>
+          </div>
+        </div>
       </section>
 
       <section class="panel panel--right" id="panel-right">
@@ -373,6 +428,10 @@ function _bindRemoveButton() {
 export function resetUI() {
   _currentState     = null;
   _selectedMemberId = null;
+  _sortOrder        = 'name-asc';
+  _filterNoFob      = false;
+  _bulkMode         = false;
+  _bulkSelected.clear();
   setDirty(false);
   clearSearch();
 
@@ -383,8 +442,13 @@ export function resetUI() {
   const btnOpen        = document.getElementById('btn-open');
   const btnClose       = document.getElementById('btn-close');
   const btnAddContact  = document.getElementById('btn-add-contact');
+  const btnBulkSelect  = document.getElementById('btn-bulk-select');
   const addContactWrap = document.getElementById('add-contact-wrap');
   const panel          = document.getElementById('panel-right');
+  const contactStats   = document.getElementById('contact-stats');
+  const bulkBar        = document.getElementById('bulk-bar');
+  const sortSelect     = document.getElementById('sort-select');
+  const filterBtn      = document.getElementById('btn-filter-nofob');
 
   if (dropZone)       { dropZone.hidden = false; }
   if (searchBar)      { searchBar.hidden = true; }
@@ -393,6 +457,11 @@ export function resetUI() {
   if (btnOpen)        { btnOpen.hidden = true; }
   if (btnClose)       { btnClose.hidden = true; }
   if (btnAddContact)  { btnAddContact.hidden = true; }
+  if (btnBulkSelect)  { btnBulkSelect.hidden = true; btnBulkSelect.classList.remove('btn--filter-active'); btnBulkSelect.textContent = t('contacts.bulk_select'); }
+  if (contactStats)   { contactStats.hidden = true; }
+  if (bulkBar)        { bulkBar.hidden = true; }
+  if (sortSelect)     { sortSelect.value = 'name-asc'; }
+  if (filterBtn)      { filterBtn.classList.remove('btn--filter-active'); }
   if (addContactWrap) { addContactWrap.hidden = true; }
   if (panel) {
     panel.innerHTML = `
@@ -414,13 +483,15 @@ let _currentState = null;
 export function renderContacts(state) {
   _currentState = state;
 
-  const dropZone      = document.getElementById('drop-zone');
-  const contactList   = document.getElementById('contact-list');
-  const searchBar     = document.getElementById('search-bar');
-  const btnSave       = document.getElementById('btn-save');
-  const btnOpen       = document.getElementById('btn-open');
-  const btnClose      = document.getElementById('btn-close');
-  const btnAddContact = document.getElementById('btn-add-contact');
+  const dropZone        = document.getElementById('drop-zone');
+  const contactList     = document.getElementById('contact-list');
+  const searchBar       = document.getElementById('search-bar');
+  const btnSave         = document.getElementById('btn-save');
+  const btnOpen         = document.getElementById('btn-open');
+  const btnClose        = document.getElementById('btn-close');
+  const btnAddContact   = document.getElementById('btn-add-contact');
+  const btnBulkSelect   = document.getElementById('btn-bulk-select');
+  const contactStats    = document.getElementById('contact-stats');
 
   if (dropZone)      dropZone.hidden      = true;
   if (searchBar)     searchBar.hidden     = false;
@@ -428,9 +499,19 @@ export function renderContacts(state) {
   if (btnSave)       btnSave.disabled     = false;
   if (btnOpen)       btnOpen.hidden       = false;
   if (btnClose)      btnClose.hidden      = false;
-  if (btnAddContact) btnAddContact.hidden = false;
+  if (btnAddContact) btnAddContact.hidden = _bulkMode;
+  if (btnBulkSelect) btnBulkSelect.hidden = false;
 
   if (!contactList) return;
+
+  // Pre-compute badge counts — O(n) instead of O(n²)
+  const badgeCountMap = new Map();
+  state.assignments.forEach(a =>
+    badgeCountMap.set(a.memberId, (badgeCountMap.get(a.memberId) ?? 0) + 1)
+  );
+
+  // H — global stats bar
+  _updateStats(state, badgeCountMap, contactStats);
 
   if (!state.contacts.length) {
     contactList.innerHTML = `
@@ -445,13 +526,26 @@ export function renderContacts(state) {
     return;
   }
 
-  const query    = _searchQuery.trim().toLowerCase();
-  const filtered = query
-    ? state.contacts.filter(c =>
-        `${c.name} ${c.surname}`.toLowerCase().includes(query) ||
-        c.apts.some(a => (a.apt ?? '').toLowerCase().includes(query))
+  // C — filter: no fob
+  let filtered = _filterNoFob
+    ? state.contacts.filter(c => !badgeCountMap.has(c.id))
+    : [...state.contacts];
+
+  // G — search: name, surname, apt, block, floor
+  const query = _searchQuery.trim().toLowerCase();
+  if (query) {
+    filtered = filtered.filter(c =>
+      `${c.name} ${c.surname}`.toLowerCase().includes(query) ||
+      c.apts.some(a =>
+        (a.apt   ?? '').toLowerCase().includes(query) ||
+        (a.block ?? '').toLowerCase().includes(query) ||
+        (a.floor ?? '').toLowerCase().includes(query)
       )
-    : state.contacts;
+    );
+  }
+
+  // A — counter
+  _updateCounter(filtered.length, state.contacts.length);
 
   if (!filtered.length) {
     contactList.innerHTML = `
@@ -462,25 +556,46 @@ export function renderContacts(state) {
     return;
   }
 
-  const badgeCountMap = new Map();
-  state.assignments.forEach(a =>
-    badgeCountMap.set(a.memberId, (badgeCountMap.get(a.memberId) ?? 0) + 1)
-  );
+  // B — sort
+  const sorted = _sortContacts(filtered, badgeCountMap);
 
   const prevScrollTop = contactList.scrollTop;
 
-  contactList.innerHTML = filtered.map(contact => {
-    const badgeCount = badgeCountMap.get(contact.id) ?? 0;
+  // D — alphabetical dividers (only for A→Z sort)
+  let prevLetter = null;
 
+  contactList.innerHTML = sorted.map(contact => {
+    const badgeCount = badgeCountMap.get(contact.id) ?? 0;
     const isSelected = contact.id === _selectedMemberId;
+    const isChecked  = _bulkSelected.has(contact.id);
     const initials   = _initials(contact.name, contact.surname);
 
-    return `
-      <div class="contact-item ${isSelected ? 'contact-item--active' : ''}"
+    let divider = '';
+    if (_sortOrder === 'name-asc' || _sortOrder === 'name-desc') {
+      const letter = (contact.surname || '?')[0].toUpperCase();
+      if (letter !== prevLetter) {
+        prevLetter = letter;
+        divider = `<div class="alpha-divider" aria-hidden="true">${_esc(letter)}</div>`;
+      }
+    }
+
+    // F — checkbox in bulk mode
+    const checkbox = _bulkMode
+      ? `<input type="checkbox" class="bulk-checkbox" tabindex="-1"
+                data-member-id="${contact.id}"
+                ${isChecked ? 'checked' : ''}
+                aria-label="${_esc(contact.surname)}, ${_esc(contact.name)}">`
+      : '';
+
+    return divider + `
+      <div class="contact-item
+                  ${isSelected && !_bulkMode ? 'contact-item--active' : ''}
+                  ${isChecked ? 'contact-item--checked' : ''}"
            data-member-id="${contact.id}"
            tabindex="0"
-           role="button"
-           aria-pressed="${isSelected}">
+           role="${_bulkMode ? 'checkbox' : 'button'}"
+           aria-${_bulkMode ? `checked="${isChecked}"` : `pressed="${isSelected}"`}>
+        ${checkbox}
         <div class="contact-item__avatar">${initials}</div>
         <div class="contact-item__info">
           <span class="contact-item__name">
@@ -501,6 +616,10 @@ export function renderContacts(state) {
   const activeItem = contactList.querySelector('.contact-item--active');
   if (activeItem) {
     activeItem.scrollIntoView({ block: 'nearest' });
+    if (_focusAfterRender) {
+      activeItem.focus();
+      _focusAfterRender = false;
+    }
   } else {
     contactList.scrollTop = prevScrollTop;
   }
@@ -508,26 +627,217 @@ export function renderContacts(state) {
   _syncPanel(state);
 }
 
+// B — sort helper
+function _sortContacts(contacts, badgeCountMap) {
+  const copy = [...contacts];
+  switch (_sortOrder) {
+    case 'name-desc':
+      return copy.sort((a, b) =>
+        `${b.surname} ${b.name}`.localeCompare(`${a.surname} ${a.name}`)
+      );
+    case 'fobs-desc':
+      return copy.sort((a, b) =>
+        (badgeCountMap.get(b.id) ?? 0) - (badgeCountMap.get(a.id) ?? 0)
+      );
+    case 'fobs-asc':
+      return copy.sort((a, b) =>
+        (badgeCountMap.get(a.id) ?? 0) - (badgeCountMap.get(b.id) ?? 0)
+      );
+    default: // name-asc
+      return copy.sort((a, b) =>
+        `${a.surname} ${a.name}`.localeCompare(`${b.surname} ${b.name}`)
+      );
+  }
+}
+
+// A — update filtered counter
+function _updateCounter(shown, total) {
+  const el = document.getElementById('contact-counter');
+  if (!el) return;
+  if (shown === total) {
+    el.textContent = _fmt('contacts.showing_all', { total });
+  } else {
+    el.textContent = _fmt('contacts.showing_filtered', { shown, total });
+  }
+}
+
+// H — update stats bar
+function _updateStats(state, badgeCountMap, el) {
+  if (!el) return;
+  el.hidden = false;
+  const total      = state.contacts.length;
+  const withFob    = state.contacts.filter(c => badgeCountMap.has(c.id)).length;
+  const without    = total - withFob;
+  const assignedIds = new Set(state.assignments.map(a => a.badgeId));
+  const unassigned  = state.badges.filter(b => !assignedIds.has(b.id)).length;
+
+  const parts = [
+    `${total} ${t('contacts.stats.contacts')}`,
+    `${withFob} ${t('contacts.stats.with_fob')}`,
+    `${without} ${t('contacts.stats.without_fob')}`,
+  ];
+  if (unassigned > 0) parts.push(`${unassigned} ${t('contacts.stats.unassigned')}`);
+  el.textContent = parts.join(' · ');
+}
+
+// i18n string with {placeholder} substitution
+function _fmt(key, vars) {
+  let str = t(key);
+  Object.entries(vars).forEach(([k, v]) => { str = str.replace(`{${k}}`, v); });
+  return str;
+}
+
 // Bind contact list delegation — attach once, not per render
 function _bindContactListEvents() {
   const contactList = document.getElementById('contact-list');
-  if (!contactList || contactList._delegated) return; // Attach only once
+  if (!contactList || contactList._delegated) return;
   contactList._delegated = true;
 
   contactList.addEventListener('click', e => {
     const item = e.target.closest('.contact-item');
     if (!item) return;
+    if (_bulkMode) {
+      _toggleBulkItem(item.dataset.memberId);
+      return;
+    }
     _selectedMemberId = item.dataset.memberId;
     renderContacts(_currentState);
   });
 
+  // E — arrow key navigation
   contactList.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const items = [...contactList.querySelectorAll('.contact-item')];
+      if (!items.length) return;
+      const idx  = items.findIndex(el => el.dataset.memberId === _selectedMemberId);
+      const next = e.key === 'ArrowDown'
+        ? (idx < items.length - 1 ? idx + 1 : 0)
+        : (idx > 0 ? idx - 1 : items.length - 1);
+      if (_bulkMode) {
+        items[next].focus();
+      } else {
+        _selectedMemberId = items[next].dataset.memberId;
+        _focusAfterRender = true;
+        renderContacts(_currentState);
+      }
+      return;
+    }
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const item = e.target.closest('.contact-item');
     if (!item) return;
     e.preventDefault();
+    if (_bulkMode) {
+      _toggleBulkItem(item.dataset.memberId);
+      return;
+    }
     _selectedMemberId = item.dataset.memberId;
     renderContacts(_currentState);
+  });
+}
+
+// F — toggle a single contact in bulk selection (no full re-render)
+function _toggleBulkItem(memberId) {
+  if (_bulkSelected.has(memberId)) {
+    _bulkSelected.delete(memberId);
+  } else {
+    _bulkSelected.add(memberId);
+  }
+
+  // Update this item's DOM directly — avoid full re-render
+  const contactList = document.getElementById('contact-list');
+  if (contactList) {
+    const item = contactList.querySelector(`[data-member-id="${CSS.escape(memberId)}"]`);
+    if (item) {
+      const checked = _bulkSelected.has(memberId);
+      item.classList.toggle('contact-item--checked', checked);
+      item.setAttribute('aria-checked', checked);
+      const cb = item.querySelector('.bulk-checkbox');
+      if (cb) cb.checked = checked;
+    }
+  }
+
+  _updateBulkBar();
+}
+
+// F — update bulk bar visibility and count
+function _updateBulkBar() {
+  const bar   = document.getElementById('bulk-bar');
+  const count = document.getElementById('bulk-count');
+  const n     = _bulkSelected.size;
+  if (bar)   bar.hidden   = n === 0;
+  if (count) count.textContent = _fmt('contacts.bulk_n_selected', { n });
+}
+
+// B — sort selector
+function _bindSortSelect() {
+  document.addEventListener('change', e => {
+    if (e.target.id !== 'sort-select') return;
+    _sortOrder = e.target.value;
+    if (_currentState) renderContacts(_currentState);
+  });
+}
+
+// C — no-fob filter toggle
+function _bindNoFobFilter() {
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('#btn-filter-nofob');
+    if (!btn) return;
+    _filterNoFob = !_filterNoFob;
+    btn.classList.toggle('btn--filter-active', _filterNoFob);
+    if (_currentState) renderContacts(_currentState);
+  });
+}
+
+// F — bulk mode toggle + bulk actions
+function _bindBulkMode() {
+  document.addEventListener('click', e => {
+    // Toggle bulk mode on/off
+    if (e.target.closest('#btn-bulk-select')) {
+      _bulkMode = !_bulkMode;
+      _bulkSelected.clear();
+      const btn = document.getElementById('btn-bulk-select');
+      if (btn) {
+        btn.textContent = _bulkMode
+          ? t('contacts.bulk_cancel')
+          : t('contacts.bulk_select');
+        btn.classList.toggle('btn--filter-active', _bulkMode);
+      }
+      const bar = document.getElementById('bulk-bar');
+      if (bar) bar.hidden = true;
+      if (_currentState) renderContacts(_currentState);
+      return;
+    }
+
+    // Bulk delete
+    if (e.target.closest('#btn-bulk-delete')) {
+      const n = _bulkSelected.size;
+      if (!n) return;
+      if (!window.confirm(_fmt('confirm.bulk_delete', { n }))) return;
+      const result = _callbacks.onBulkDelete({ memberIds: [..._bulkSelected] });
+      if (!result?.ok) showSystemError('error.save');
+      return;
+    }
+
+    // Bulk assign badge
+    if (e.target.closest('#btn-bulk-assign')) {
+      const uidInput = document.getElementById('bulk-uid-input');
+      const typeSelect = document.getElementById('bulk-type-select');
+      if (!uidInput || !typeSelect) return;
+      const uid  = uidInput.value.trim().toUpperCase();
+      const type = parseInt(typeSelect.value, 10);
+      if (uid.length !== 8) {
+        showSystemError('error.bulk_uid');
+        return;
+      }
+      const result = _callbacks.onBulkAssign({ memberIds: [..._bulkSelected], uid, type });
+      if (!result?.ok) {
+        showSystemError(result?.error ?? 'error.save');
+      } else {
+        uidInput.value = '';
+      }
+      return;
+    }
   });
 }
 
