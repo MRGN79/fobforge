@@ -248,8 +248,8 @@ export function handleDeleteContact({ memberId }) {
 
 export function handleAddApartment({ memberId, apt, scsAddr, block, floor }) {
   apt = (apt ?? '').trim();
-  scsAddr = scsAddr ? parseInt(scsAddr, 10) : 0;
-  if (isNaN(scsAddr)) scsAddr = 0;
+  scsAddr = scsAddr !== '' ? parseInt(scsAddr, 10) : null;
+  if (scsAddr !== null && isNaN(scsAddr)) scsAddr = null;
   block = (block ?? '').trim();
   floor = (floor ?? '').trim();
 
@@ -260,7 +260,7 @@ export function handleAddApartment({ memberId, apt, scsAddr, block, floor }) {
 
   try {
     const aptId = _generateUUID();
-    addApartment(aptId, apt, scsAddr === '' ? null : scsAddr, block, floor);
+    addApartment(aptId, apt, scsAddr, block, floor);
     assignApartment(memberId, aptId);
   } catch (e) {
     console.error(e);
@@ -312,7 +312,7 @@ export function handleBulkAssign({ memberIds, uid, type }) {
   uid = uid.trim().toUpperCase();
 
   const uidResult = validateUID(uid, state.badges);
-  const badgeExists = state.badges.some(b => b.id === uid || b.uid === uid);
+  const badgeExists = state.badges.some(b => b.id === uid);
 
   try {
     if (!badgeExists) {
@@ -322,7 +322,7 @@ export function handleBulkAssign({ memberIds, uid, type }) {
     let assigned = 0;
     memberIds.forEach(memberId => {
       const alreadyAssigned = state.assignments.some(
-        a => a.memberId === memberId && (a.badgeId === uid || a.uid === uid)
+        a => a.memberId === memberId && a.badgeId === uid
       );
       if (!alreadyAssigned) {
         assignBadge(memberId, uid);
