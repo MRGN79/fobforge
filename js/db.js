@@ -123,6 +123,18 @@ export function closeDb() {
 // Exposed for automated tests only — do not use in application code.
 export function _getDb() { return _db; }
 
+export function withTransaction(fn) {
+  if (!_db) throw new Error('No database loaded');
+  _db.run('BEGIN');
+  try {
+    fn();
+    _db.run('COMMIT');
+  } catch (e) {
+    _db.run('ROLLBACK');
+    throw e;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Read functions
 // ---------------------------------------------------------------------------
@@ -263,26 +275,26 @@ export function assignBadge(memberId, badgeId) {
 export function removeBadge(memberId, badgeId) {
   if (!_db) throw new Error('No database loaded');
 
-  // Remove assignment
-  _db.run(
-    'DELETE FROM MEMBER_BADGE WHERE ID_MEMBER = ? AND ID_BADGE = ?',
-    [memberId, badgeId]
-  );
+  withTransaction(() => {
+    _db.run(
+      'DELETE FROM MEMBER_BADGE WHERE ID_MEMBER = ? AND ID_BADGE = ?',
+      [memberId, badgeId]
+    );
 
-  // Check if badge is still assigned to anyone else
-  const stmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?');
-  let count = 0;
-  try {
-    stmt.bind([badgeId]);
-    stmt.step();
-    count = stmt.getAsObject()['cnt'] ?? 0;
-  } finally {
-    stmt.free();
-  }
+    const stmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?');
+    let count = 0;
+    try {
+      stmt.bind([badgeId]);
+      stmt.step();
+      count = stmt.getAsObject()['cnt'] ?? 0;
+    } finally {
+      stmt.free();
+    }
 
-  if (count === 0) {
-    _db.run('DELETE FROM BADGE WHERE ID_BADGE = ?', [badgeId]);
-  }
+    if (count === 0) {
+      _db.run('DELETE FROM BADGE WHERE ID_BADGE = ?', [badgeId]);
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -426,23 +438,25 @@ export function editApartment(aptId, apt, scsAddr, block, floor) {
 
 export function removeApartment(memberId, aptId) {
   if (!_db) throw new Error('No database loaded');
-  _db.run(
-    'DELETE FROM MEMBER_APT WHERE ID_MEMBER = ? AND ID_APT = ?',
-    [memberId, aptId]
-  );
 
-  // Check if apartment is still assigned to anyone else
-  const stmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_APT WHERE ID_APT = ?');
-  let count = 0;
-  try {
-    stmt.bind([aptId]);
-    stmt.step();
-    count = stmt.getAsObject()['cnt'] ?? 0;
-  } finally {
-    stmt.free();
-  }
+  withTransaction(() => {
+    _db.run(
+      'DELETE FROM MEMBER_APT WHERE ID_MEMBER = ? AND ID_APT = ?',
+      [memberId, aptId]
+    );
 
-  if (count === 0) {
-    _db.run('DELETE FROM APT WHERE ID_APT = ?', [aptId]);
-  }
+    const stmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_APT WHERE ID_APT = ?');
+    let count = 0;
+    try {
+      stmt.bind([aptId]);
+      stmt.step();
+      count = stmt.getAsObject()['cnt'] ?? 0;
+    } finally {
+      stmt.free();
+    }
+
+    if (count === 0) {
+      _db.run('DELETE FROM APT WHERE ID_APT = ?', [aptId]);
+    }
+  });
 }

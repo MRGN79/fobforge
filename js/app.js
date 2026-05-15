@@ -13,6 +13,7 @@ import {
   addBadge, assignBadge, removeBadge,
   addContact, editContact, deleteContact,
   addApartment, assignApartment, removeApartment,
+  withTransaction,
 } from './db.js';
 import {
   initUI, renderContacts, clearSelection, clearSearch,
@@ -91,7 +92,7 @@ export function handleNew() {
     createEmptyDb();
   } catch (e) {
     console.error(e);
-    showSystemError('error.sqljsload');
+    showSystemError('error.db.create');
     return;
   }
 
@@ -230,7 +231,7 @@ export function handleEditContact({ memberId, name, surname }) {
 
 export function handleDeleteContact({ memberId }) {
   try {
-    deleteContact(memberId);
+    withTransaction(() => deleteContact(memberId));
   } catch (e) {
     console.error(e);
     return { ok: false };
@@ -294,7 +295,7 @@ export function handleRemoveApartment({ memberId, aptId }) {
 export function handleBulkDelete({ memberIds }) {
   if (!memberIds.length) return { ok: false };
   try {
-    memberIds.forEach(id => deleteContact(id));
+    withTransaction(() => memberIds.forEach(id => deleteContact(id)));
   } catch (e) {
     console.error(e);
     return { ok: false };
@@ -314,30 +315,35 @@ export function handleBulkAssign({ memberIds, uid, type }) {
   const uidResult = validateUID(uid, state.badges);
   const badgeExists = state.badges.some(b => b.id === uid);
 
+  if (!badgeExists && !uidResult.valid) {
+    return { ok: false, field: 'uid', error: uidResult.error };
+  }
+
+  let assigned = 0;
   try {
-    if (!badgeExists) {
-      if (!uidResult.valid) return { ok: false, error: uidResult.error };
-      addBadge(uid, type, '');
-    }
-    let assigned = 0;
-    memberIds.forEach(memberId => {
-      const alreadyAssigned = state.assignments.some(
-        a => a.memberId === memberId && a.badgeId === uid
-      );
-      if (!alreadyAssigned) {
-        assignBadge(memberId, uid);
-        assigned++;
+    withTransaction(() => {
+      if (!badgeExists) {
+        addBadge(uid, type, '');
       }
+      memberIds.forEach(memberId => {
+        const alreadyAssigned = state.assignments.some(
+          a => a.memberId === memberId && a.badgeId === uid
+        );
+        if (!alreadyAssigned) {
+          assignBadge(memberId, uid);
+          assigned++;
+        }
+      });
     });
-    if (assigned === 0) return { ok: false, error: 'error.badge.assigned' };
   } catch (e) {
     console.error(e);
     return { ok: false, error: 'error.save' };
   }
+  if (assigned === 0) return { ok: false, error: 'error.badge.assigned' };
   state.dirty = true;
   setDirty(true);
   _refreshState();
-  const msg = t('success.bulk_assigned').replace('{n}', memberIds.length);
+  const msg = t('success.bulk_assigned').replace('{n}', assigned);
   showSuccess(msg);
   return { ok: true };
 }

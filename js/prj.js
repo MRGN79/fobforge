@@ -231,7 +231,7 @@ export function parseZipEntries(buf) {
 
   while (offset < buf.length - 4) {
     const idx = buf.indexOf(0x50, offset);
-    if (idx === -1) break;
+    if (idx === -1 || idx > buf.length - 4) break;
     if (buf[idx+1] !== 0x4b || buf[idx+2] !== 0x03 || buf[idx+3] !== 0x04) {
       offset = idx + 1;
       continue;

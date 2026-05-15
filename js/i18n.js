@@ -67,6 +67,7 @@ const strings = {
     'error.file.toobig':        'File too large (max 20 MB)',
     'error.save':               'Error saving file',
     'error.sqljsload':          'Error loading SQL engine. Check your connection and reload.',
+    'error.db.create':          'Error creating new database.',
 
     // Confirmations
     'confirm.close':            'You have unsaved changes. Close anyway?',
@@ -200,6 +201,7 @@ const strings = {
     'error.file.toobig':        'Fichero demasiado grande (máx. 20 MB)',
     'error.save':               'Error al guardar el fichero',
     'error.sqljsload':          'Error al cargar el motor SQL. Comprueba tu conexión y recarga.',
+    'error.db.create':          'Error al crear la base de datos.',
 
     // Confirmations
     'confirm.close':            'Tienes cambios sin guardar. ¿Cerrar igualmente?',

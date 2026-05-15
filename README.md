@@ -77,6 +77,7 @@ FobForge does not distribute any BTicino software or copyrighted material.
 ## Feedback & Support
 
 - **Report issues or suggest features:** [GitHub Issues](https://github.com/MRGN79/fobforge/issues/new)
+- **Direct contact:** [mrgn79@protonmail.com](mailto:mrgn79@protonmail.com)
 - **Usage stats:** [GoatCounter analytics](https://mrgn79.goatcounter.com) (public)
 
 ---
