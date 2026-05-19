@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build": "mkdir -p dist && cp index.html robots.txt sitemap.xml og-image.svg dist/ && cp -r css js dist/"
   },
   "repository": {
     "type": "git",

@@ -1,3 +1,7 @@
 node_modules/
 coverage/
 tests/fixtures/*.prj
+CLAUDE.md
+dist/
+.wrangler/
+wrangler.jsonc

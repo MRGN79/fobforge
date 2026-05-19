@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d0d0d"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4a0"/>
+      <stop offset="100%" style="stop-color:#00a8d4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Accent bar top -->
+  <rect width="1200" height="4" fill="url(#accent)"/>
+
+  <!-- Key icon -->
+  <text x="100" y="290" font-size="140" font-family="serif">🔑</text>
+
+  <!-- Title -->
+  <text x="300" y="240"
+        font-family="'Helvetica Neue', Arial, sans-serif"
+        font-size="72" font-weight="700"
+        fill="#ffffff"
+        letter-spacing="-1">FobForge</text>
+
+  <!-- Subtitle -->
+  <text x="300" y="310"
+        font-family="'Helvetica Neue', Arial, sans-serif"
+        font-size="30" font-weight="400"
+        fill="#00d4a0">RFID Badge Manager for BTicino Sfera</text>
+
+  <!-- Description -->
+  <text x="300" y="380"
+        font-family="'Helvetica Neue', Arial, sans-serif"
+        font-size="24" font-weight="300"
+        fill="#888888">Free · Browser-based · No install · Works offline</text>
+
+  <!-- URL -->
+  <text x="300" y="480"
+        font-family="'Courier New', monospace"
+        font-size="20" font-weight="400"
+        fill="#444444">mrgn79.github.io/fobforge</text>
+
+  <!-- Accent bar bottom -->
+  <rect y="626" width="1200" height="4" fill="url(#accent)"/>
+</svg>
