@@ -231,7 +231,7 @@ export function handleEditContact({ memberId, name, surname }) {
 
 export function handleDeleteContact({ memberId }) {
   try {
-    withTransaction(() => deleteContact(memberId));
+    deleteContact(memberId);
   } catch (e) {
     console.error(e);
     return { ok: false };

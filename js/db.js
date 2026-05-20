@@ -6,6 +6,7 @@
 
 let _db = null;
 let _SQL = null;
+let _inTransaction = false;
 
 // ---------------------------------------------------------------------------
 // Init
@@ -125,6 +126,8 @@ export function _getDb() { return _db; }
 
 export function withTransaction(fn) {
   if (!_db) throw new Error('No database loaded');
+  if (_inTransaction) { fn(); return; }
+  _inTransaction = true;
   _db.run('BEGIN');
   try {
     fn();
@@ -132,6 +135,8 @@ export function withTransaction(fn) {
   } catch (e) {
     _db.run('ROLLBACK');
     throw e;
+  } finally {
+    _inTransaction = false;
   }
 }
 
@@ -329,72 +334,74 @@ export function editContact(memberId, name, surname) {
 export function deleteContact(memberId) {
   if (!_db) throw new Error('No database loaded');
 
-  // Collect IDs of related records before removing links (orphan cleanup after)
-  const badgeStmt = _db.prepare('SELECT ID_BADGE FROM MEMBER_BADGE WHERE ID_MEMBER = ?');
-  const badgeIds = [];
-  try {
-    badgeStmt.bind([memberId]);
-    while (badgeStmt.step()) badgeIds.push(badgeStmt.get()[0]);
-  } finally {
-    badgeStmt.free();
-  }
-
-  const aptStmt = _db.prepare('SELECT ID_APT FROM MEMBER_APT WHERE ID_MEMBER = ?');
-  const aptIds = [];
-  try {
-    aptStmt.bind([memberId]);
-    while (aptStmt.step()) aptIds.push(aptStmt.get()[0]);
-  } finally {
-    aptStmt.free();
-  }
-
-  const minutiaeStmt = _db.prepare('SELECT ID_MINUTIAE FROM MEMBER_MINUTIAE WHERE ID_MEMBER = ?');
-  const minutiaeIds = [];
-  try {
-    minutiaeStmt.bind([memberId]);
-    while (minutiaeStmt.step()) minutiaeIds.push(minutiaeStmt.get()[0]);
-  } finally {
-    minutiaeStmt.free();
-  }
-
-  // Delete scans before minutiae (child rows first)
-  for (const id of minutiaeIds) {
-    _db.run('DELETE FROM MEMBER_MINUTIAE_SCAN WHERE ID_MINUTIAE = ?', [id]);
-  }
-
-  _db.run('DELETE FROM MEMBER_MINUTIAE WHERE ID_MEMBER = ?',      [memberId]);
-  _db.run('DELETE FROM MEMBER_LOCK_PASSWORD WHERE ID_MEMBER = ?', [memberId]);
-  _db.run('DELETE FROM MEMBER_APT WHERE ID_MEMBER = ?',           [memberId]);
-  _db.run('DELETE FROM MEMBER_BADGE WHERE ID_MEMBER = ?',         [memberId]);
-  _db.run('DELETE FROM MEMBER WHERE ID_MEMBER = ?',               [memberId]);
-
-  // Delete orphaned badges (no remaining assignments anywhere)
-  for (const badgeId of badgeIds) {
-    const countStmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?');
-    let count = 0;
+  withTransaction(() => {
+    // Collect IDs of related records before removing links (orphan cleanup after)
+    const badgeStmt = _db.prepare('SELECT ID_BADGE FROM MEMBER_BADGE WHERE ID_MEMBER = ?');
+    const badgeIds = [];
     try {
-      countStmt.bind([badgeId]);
-      countStmt.step();
-      count = countStmt.getAsObject()['cnt'] ?? 0;
+      badgeStmt.bind([memberId]);
+      while (badgeStmt.step()) badgeIds.push(badgeStmt.get()[0]);
     } finally {
-      countStmt.free();
+      badgeStmt.free();
     }
-    if (count === 0) _db.run('DELETE FROM BADGE WHERE ID_BADGE = ?', [badgeId]);
-  }
 
-  // Delete orphaned apartments (no remaining member links anywhere)
-  for (const aptId of aptIds) {
-    const countStmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_APT WHERE ID_APT = ?');
-    let count = 0;
+    const aptStmt = _db.prepare('SELECT ID_APT FROM MEMBER_APT WHERE ID_MEMBER = ?');
+    const aptIds = [];
     try {
-      countStmt.bind([aptId]);
-      countStmt.step();
-      count = countStmt.getAsObject()['cnt'] ?? 0;
+      aptStmt.bind([memberId]);
+      while (aptStmt.step()) aptIds.push(aptStmt.get()[0]);
     } finally {
-      countStmt.free();
+      aptStmt.free();
     }
-    if (count === 0) _db.run('DELETE FROM APT WHERE ID_APT = ?', [aptId]);
-  }
+
+    const minutiaeStmt = _db.prepare('SELECT ID_MINUTIAE FROM MEMBER_MINUTIAE WHERE ID_MEMBER = ?');
+    const minutiaeIds = [];
+    try {
+      minutiaeStmt.bind([memberId]);
+      while (minutiaeStmt.step()) minutiaeIds.push(minutiaeStmt.get()[0]);
+    } finally {
+      minutiaeStmt.free();
+    }
+
+    // Delete scans before minutiae (child rows first)
+    for (const id of minutiaeIds) {
+      _db.run('DELETE FROM MEMBER_MINUTIAE_SCAN WHERE ID_MINUTIAE = ?', [id]);
+    }
+
+    _db.run('DELETE FROM MEMBER_MINUTIAE WHERE ID_MEMBER = ?',      [memberId]);
+    _db.run('DELETE FROM MEMBER_LOCK_PASSWORD WHERE ID_MEMBER = ?', [memberId]);
+    _db.run('DELETE FROM MEMBER_APT WHERE ID_MEMBER = ?',           [memberId]);
+    _db.run('DELETE FROM MEMBER_BADGE WHERE ID_MEMBER = ?',         [memberId]);
+    _db.run('DELETE FROM MEMBER WHERE ID_MEMBER = ?',               [memberId]);
+
+    // Delete orphaned badges (no remaining assignments anywhere)
+    for (const badgeId of badgeIds) {
+      const countStmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_BADGE WHERE ID_BADGE = ?');
+      let count = 0;
+      try {
+        countStmt.bind([badgeId]);
+        countStmt.step();
+        count = countStmt.getAsObject()['cnt'] ?? 0;
+      } finally {
+        countStmt.free();
+      }
+      if (count === 0) _db.run('DELETE FROM BADGE WHERE ID_BADGE = ?', [badgeId]);
+    }
+
+    // Delete orphaned apartments (no remaining member links anywhere)
+    for (const aptId of aptIds) {
+      const countStmt = _db.prepare('SELECT COUNT(*) AS cnt FROM MEMBER_APT WHERE ID_APT = ?');
+      let count = 0;
+      try {
+        countStmt.bind([aptId]);
+        countStmt.step();
+        count = countStmt.getAsObject()['cnt'] ?? 0;
+      } finally {
+        countStmt.free();
+      }
+      if (count === 0) _db.run('DELETE FROM APT WHERE ID_APT = ?', [aptId]);
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------

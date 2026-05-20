@@ -219,8 +219,8 @@ function _renderShell() {
           </div>
           <div class="bulk-bar__row bulk-bar__row--assign">
             <input type="text" id="bulk-uid-input" class="form-input bulk-uid-input"
-                   maxlength="8" placeholder="UID" autocomplete="off"
-                   aria-label="Badge UID">
+                   maxlength="8" data-i18n-placeholder="badges.uid" autocomplete="off"
+                   data-i18n-aria-label="badges.uid">
             <select id="bulk-type-select" class="sort-select bulk-type-select">
               <option value="0" data-i18n="badges.type.0"></option>
               <option value="1" data-i18n="badges.type.1"></option>
@@ -845,6 +845,7 @@ function _bindBulkMode() {
         showSystemError(result?.error ?? 'error.save');
       } else {
         uidInput.value = '';
+        typeSelect.value = '0';
         _bulkSelected.clear();
         _updateBulkBar();
       }
@@ -1261,6 +1262,7 @@ function _bindContactPanelActions(panel) {
         return;
       }
       showSuccess('success.contact.updated');
+      editWrap.hidden = true;
     });
   }
 
@@ -1368,8 +1370,8 @@ function _aptMeta(apts) {
   const aptStr = apts.map(a => _esc(a.apt ?? '')).filter(Boolean).join(', ');
   const scsStr = apts.map(a => a.scsAddr ?? '').filter(v => v !== '' && v != null).join(', ');
   const parts = [];
-  if (aptStr) parts.push(`APT ${aptStr}`);
-  if (scsStr) parts.push(`SCS ${scsStr}`);
+  if (aptStr) parts.push(`${t('apt.prefix')} ${aptStr}`);
+  if (scsStr) parts.push(`${t('apt.scs_prefix')} ${scsStr}`);
   return parts.join(' &middot; ');
 }
 
