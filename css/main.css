@@ -1172,6 +1172,38 @@ body {
   outline-offset: 2px;
 }
 
+.help-link {
+  position:       fixed;
+  bottom:         24px;
+  right:          24px;
+  z-index:        200;
+  width:          32px;
+  height:         32px;
+  background:     var(--color-surface-2);
+  border:         1px solid var(--color-border);
+  border-radius:  var(--radius-sm);
+  display:        flex;
+  align-items:    center;
+  justify-content: center;
+  font-size:      15px;
+  font-weight:    600;
+  color:          var(--color-text-muted);
+  cursor:         pointer;
+  transition:     border-color 0.15s, background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+
+.help-link:hover {
+  border-color: var(--color-accent);
+  background:   color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color:        var(--color-accent);
+}
+
+.help-link:focus-visible {
+  outline:        2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 /* ---------------------------------------------------------------------------
    Responsive — tablet portrait
 --------------------------------------------------------------------------- */

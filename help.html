@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+        content="FobForge FAQ — How to add RFID badges to BTicino Sfera New and Sfera Robur .prj files, find badge UIDs, and manage contacts without TiSferaDesign.">
+  <meta name="keywords"
+        content="BTicino Sfera, BTicino .prj, TiSferaDesign, Sfera New, Sfera Robur, RFID badge, badge UID, NFC badge, BTicino Legrand, access control, door entry, fob manager">
+  <meta name="author" content="MRGN79">
+
+  <title>FobForge — Help &amp; FAQ</title>
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://mrgn79.github.io/fobforge/help.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="article">
+  <meta property="og:url"         content="https://mrgn79.github.io/fobforge/help.html">
+  <meta property="og:title"       content="FobForge — Help &amp; FAQ">
+  <meta property="og:description" content="How to add RFID badges to BTicino Sfera New and Sfera Robur .prj files, find badge UIDs, and manage contacts without TiSferaDesign.">
+  <meta property="og:locale"      content="en_GB">
+  <meta property="og:image"       content="https://mrgn79.github.io/fobforge/og-image.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt"   content="FobForge — RFID Badge Manager for BTicino Sfera">
+
+  <!-- JSON-LD: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "url": "https://mrgn79.github.io/fobforge/help.html",
+    "name": "FobForge Help &amp; FAQ",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is FobForge?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FobForge is a free, browser-based tool that lets you add, edit, and remove RFID badges and contacts in BTicino Sfera .prj files — entirely in your browser, with no installation and no server. Your files never leave your device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which BTicino systems does FobForge support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FobForge supports BTicino Sfera New and Sfera Robur door entry systems. These are the systems managed by the TiSferaDesign software, which produces .prj project files."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is a BTicino .prj file?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A .prj file is the project file created and used by BTicino's TiSferaDesign software to store all configuration for a Sfera door entry system: contacts, apartments, RFID badge assignments, and access codes. It is a double-encrypted ZIP archive containing a SQLite database."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why can't I add RFID badges remotely with TiSferaDesign?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "TiSferaDesign requires a USB connection to the physical reader module to register new RFID badges. This forces technicians to visit the installation site every time a new badge needs to be programmed. FobForge bypasses this limitation by editing the .prj file directly — the badge UID (printed on every transponder) is all you need."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I add an RFID badge in FobForge?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "1. Open FobForge at https://mrgn79.github.io/fobforge/. 2. Load your .prj file using the Open button. 3. Select the contact you want to assign the badge to. 4. Click Add badge and enter the 8-character UID (printed on the badge or fob). 5. Click Save to download the modified .prj file. Replace the original file in TiSferaDesign or upload it to the reader."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I find the UID of my RFID badge or fob?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The UID is printed on the badge or key fob, usually as an 8-character hexadecimal code (e.g. A3F2B801). On 125 kHz EM4102 transponders it may be printed as a decimal number — you will need to convert it to hexadecimal. On 13.56 MHz MIFARE cards the UID is typically on the back. You can also read it with any NFC-capable Android phone using a free UID reader app."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What RFID / NFC formats are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "BTicino Sfera readers accept 125 kHz EM4102 transponders and 13.56 MHz MIFARE Classic cards. FobForge stores the UID as an 8-character uppercase hex string, which matches both formats. The format is determined by your physical reader hardware, not by FobForge."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my data safe? Does FobForge upload my files?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, your data is completely safe. FobForge runs 100% in your browser using WebAssembly. Your .prj files are never uploaded to any server — all processing happens locally on your device. The source code is open and auditable on GitHub."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does FobForge work offline?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Once the page has loaded, FobForge works entirely offline. You can open .prj files, make changes, and save the result without any internet connection."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use FobForge instead of TiSferaDesign?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "FobForge is a complement to TiSferaDesign, not a full replacement. It focuses on the specific task of managing RFID badges and contacts in .prj files without requiring physical access to the reader. For initial system commissioning, firmware updates, or advanced configuration, TiSferaDesign with hardware access is still required."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD: BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "FobForge",
+        "item": "https://mrgn79.github.io/fobforge/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Help & FAQ",
+        "item": "https://mrgn79.github.io/fobforge/help.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+      <text y='.9em' font-size='90'>🔑</text>
+    </svg>">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #1a1a1a;
+      --border:   #2a2a2a;
+      --text:     #e8e8e8;
+      --muted:    #888;
+      --accent:   #00d4a0;
+      --radius:   8px;
+      --font:     -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg:      #f5f5f5;
+        --surface: #ffffff;
+        --border:  #e0e0e0;
+        --text:    #1a1a1a;
+        --muted:   #666;
+      }
+    }
+
+    body {
+      background: var(--bg);
+      color:      var(--text);
+      font-family: var(--font);
+      font-size:  16px;
+      line-height: 1.6;
+      padding:    24px 16px 64px;
+    }
+
+    .container {
+      max-width: 760px;
+      margin:    0 auto;
+    }
+
+    header {
+      padding:       32px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+
+    .breadcrumb {
+      font-size:   13px;
+      color:       var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .breadcrumb a {
+      color:           var(--accent);
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    h1 {
+      font-size:   2rem;
+      font-weight: 700;
+      color:       var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color:     var(--muted);
+      font-size: 1rem;
+    }
+
+    .faq-list {
+      list-style: none;
+      display:    flex;
+      flex-direction: column;
+      gap:        12px;
+    }
+
+    details {
+      background:    var(--surface);
+      border:        1px solid var(--border);
+      border-radius: var(--radius);
+      overflow:      hidden;
+    }
+
+    details[open] { border-color: var(--accent); }
+
+    summary {
+      padding:    18px 20px;
+      font-weight: 600;
+      font-size:  0.975rem;
+      cursor:     pointer;
+      list-style: none;
+      display:    flex;
+      justify-content: space-between;
+      align-items: center;
+      gap:        12px;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    summary::after {
+      content:     '+';
+      font-size:   1.25rem;
+      font-weight: 300;
+      color:       var(--accent);
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    details[open] summary::after { content: '−'; }
+
+    summary:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+    .answer {
+      padding:     0 20px 20px;
+      color:       var(--muted);
+      font-size:   0.925rem;
+      line-height: 1.7;
+    }
+
+    .answer ol {
+      padding-left: 20px;
+      margin-top:   8px;
+    }
+
+    .answer ol li { margin-bottom: 4px; }
+
+    footer {
+      margin-top:    64px;
+      padding-top:   24px;
+      border-top:    1px solid var(--border);
+      font-size:     13px;
+      color:         var(--muted);
+      display:       flex;
+      gap:           16px;
+      flex-wrap:     wrap;
+      align-items:   center;
+    }
+
+    footer a {
+      color:           var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.5rem; }
+      summary { padding: 14px 16px; }
+      .answer { padding: 0 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="./">FobForge</a> / Help &amp; FAQ
+      </nav>
+      <h1>Help &amp; FAQ</h1>
+      <p class="subtitle">How to manage RFID badges in BTicino Sfera .prj files</p>
+    </header>
+
+    <main id="main-content">
+      <ul class="faq-list" role="list">
+
+        <li>
+          <details>
+            <summary>What is FobForge?</summary>
+            <div class="answer">
+              FobForge is a free, browser-based tool that lets you add, edit, and remove RFID badges and
+              contacts in BTicino Sfera <code>.prj</code> files — entirely in your browser, with no
+              installation and no server. Your files never leave your device.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>Which BTicino systems does FobForge support?</summary>
+            <div class="answer">
+              FobForge supports <strong>BTicino Sfera New</strong> and <strong>Sfera Robur</strong>
+              door entry systems — the systems managed by the TiSferaDesign software, which produces
+              <code>.prj</code> project files.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>What is a BTicino .prj file?</summary>
+            <div class="answer">
+              A <code>.prj</code> file is the project file created by BTicino's TiSferaDesign software.
+              It stores all configuration for a Sfera door entry system: contacts, apartments, RFID badge
+              assignments, and access codes. Internally it is a double-encrypted ZIP archive containing
+              a SQLite database. FobForge can read, modify, and re-save these files while preserving
+              all original data.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>Why can't I add RFID badges remotely with TiSferaDesign?</summary>
+            <div class="answer">
+              TiSferaDesign requires a USB connection to the physical reader module to register new RFID
+              badges. This forces technicians to visit the installation site every time a new badge needs
+              to be programmed. FobForge bypasses this limitation by editing the <code>.prj</code> file
+              directly — the badge UID (printed on every transponder) is all you need.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>How do I add an RFID badge in FobForge?</summary>
+            <div class="answer">
+              <ol>
+                <li>Open <a href="./">FobForge</a>.</li>
+                <li>Load your <code>.prj</code> file using the <strong>Open</strong> button.</li>
+                <li>Select the contact you want to assign the badge to.</li>
+                <li>Click <strong>Add badge</strong> and enter the 8-character UID (printed on the badge or fob).</li>
+                <li>Click <strong>Save</strong> to download the modified <code>.prj</code> file.</li>
+                <li>Load the saved file back into TiSferaDesign or upload it to the reader.</li>
+              </ol>
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>How do I find the UID of my RFID badge or fob?</summary>
+            <div class="answer">
+              The UID is usually printed on the badge or key fob as an 8-character hexadecimal code
+              (e.g. <code>A3F2B801</code>). On some 125 kHz EM4102 transponders it may be printed as a
+              decimal number — convert it to hexadecimal to use it in FobForge.
+              On 13.56 MHz MIFARE cards the UID is typically printed on the back.
+              You can also read the UID with any NFC-capable Android phone using a free UID reader app
+              from the Play Store.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>What RFID / NFC formats are supported?</summary>
+            <div class="answer">
+              BTicino Sfera readers typically accept <strong>125 kHz EM4102</strong> transponders and
+              <strong>13.56 MHz MIFARE Classic</strong> cards. FobForge stores the UID as an 8-character
+              uppercase hex string, which matches both formats. The exact format accepted depends on your
+              physical reader module — consult your BTicino installation documentation.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>Is my data safe? Does FobForge upload my files?</summary>
+            <div class="answer">
+              Yes — your data is completely safe. FobForge runs 100% in your browser using WebAssembly.
+              Your <code>.prj</code> files are <strong>never uploaded to any server</strong>; all
+              processing happens locally on your device. The source code is open and auditable on
+              <a href="https://github.com/MRGN79/fobforge" target="_blank" rel="noopener">GitHub</a>.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>Does FobForge work offline?</summary>
+            <div class="answer">
+              Yes. Once the page has loaded, FobForge works entirely offline. You can open
+              <code>.prj</code> files, make changes, and save the result without any internet connection.
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>Can I use FobForge instead of TiSferaDesign?</summary>
+            <div class="answer">
+              FobForge is a complement to TiSferaDesign, not a full replacement. It focuses on the
+              specific task of managing RFID badges and contacts in <code>.prj</code> files without
+              requiring physical access to the reader. For initial system commissioning, firmware updates,
+              or advanced configuration, TiSferaDesign with hardware access is still required.
+            </div>
+          </details>
+        </li>
+
+      </ul>
+    </main>
+
+    <footer>
+      <a href="./">← Back to FobForge</a>
+      <span>·</span>
+      <a href="https://github.com/MRGN79/fobforge" target="_blank" rel="noopener">GitHub</a>
+      <span>·</span>
+      <span>MIT License</span>
+    </footer>
+  </div>
+</body>
+</html>
