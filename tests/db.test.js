@@ -8,6 +8,7 @@ import {
   addBadge, assignBadge, removeBadge,
   addContact, editContact, deleteContact,
   addApartment, assignApartment, editApartment, removeApartment,
+  withTransaction,
 } from '../js/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -86,6 +87,11 @@ describe('addBadge', () => {
     expect(getBadges()).toHaveLength(2);
   });
 
+  it('getBadges returns [] when no database is loaded', () => {
+    closeDb();
+    expect(getBadges()).toEqual([]);
+  });
+
   it('throws when no database is loaded', () => {
     closeDb();
     expect(() => addBadge('AABBCCDD', 0, '')).toThrow();
@@ -109,6 +115,16 @@ describe('assignBadge', () => {
     assignBadge('member-1', 'AABBCCDD');
     assignBadge('member-1', '11223344');
     expect(getAssignments()).toHaveLength(2);
+  });
+
+  it('getAssignments returns [] when no database is loaded', () => {
+    closeDb();
+    expect(getAssignments()).toEqual([]);
+  });
+
+  it('throws when no database is loaded', () => {
+    closeDb();
+    expect(() => assignBadge('m1', 'AABBCCDD')).toThrow();
   });
 });
 
@@ -144,6 +160,11 @@ describe('removeBadge', () => {
     expect(() => removeBadge('member-x', 'FFFFFFFF')).not.toThrow();
     expect(getAssignments()).toEqual([]);
   });
+
+  it('throws when no database is loaded', () => {
+    closeDb();
+    expect(() => removeBadge('m1', 'AABBCCDD')).toThrow();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -152,6 +173,11 @@ describe('removeBadge', () => {
 
 describe('getContacts', () => {
   it('returns empty array when no members exist', () => {
+    expect(getContacts()).toEqual([]);
+  });
+
+  it('returns [] when no database is loaded', () => {
+    closeDb();
     expect(getContacts()).toEqual([]);
   });
 
@@ -343,6 +369,35 @@ describe('deleteContact', () => {
   it('throws when no database is loaded', () => {
     closeDb();
     expect(() => deleteContact('m1')).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// withTransaction
+// ---------------------------------------------------------------------------
+
+describe('withTransaction', () => {
+  it('commits changes on success', () => {
+    withTransaction(() => addContact('m1', 'John', 'Doe'));
+    expect(getContacts()).toHaveLength(1);
+  });
+
+  it('rolls back and rethrows on error', () => {
+    expect(() =>
+      withTransaction(() => {
+        addContact('m2', 'Jane', 'Doe');
+        throw new Error('forced');
+      })
+    ).toThrow('forced');
+    expect(getContacts()).toHaveLength(0);
+  });
+
+  it('re-entrant call skips nested BEGIN and commits with outer transaction', () => {
+    withTransaction(() => {
+      addContact('m3', 'Ana', 'Lara');
+      withTransaction(() => addContact('m4', 'Luis', 'Vera'));
+    });
+    expect(getContacts()).toHaveLength(2);
   });
 });
 

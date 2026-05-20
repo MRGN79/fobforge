@@ -291,7 +291,7 @@ export function removeBadge(memberId, badgeId) {
     try {
       stmt.bind([badgeId]);
       stmt.step();
-      count = stmt.getAsObject()['cnt'] ?? 0;
+      count = stmt.getAsObject()['cnt'];
     } finally {
       stmt.free();
     }
@@ -381,7 +381,7 @@ export function deleteContact(memberId) {
       try {
         countStmt.bind([badgeId]);
         countStmt.step();
-        count = countStmt.getAsObject()['cnt'] ?? 0;
+        count = countStmt.getAsObject()['cnt'];
       } finally {
         countStmt.free();
       }
@@ -395,7 +395,7 @@ export function deleteContact(memberId) {
       try {
         countStmt.bind([aptId]);
         countStmt.step();
-        count = countStmt.getAsObject()['cnt'] ?? 0;
+        count = countStmt.getAsObject()['cnt'];
       } finally {
         countStmt.free();
       }
@@ -457,7 +457,7 @@ export function removeApartment(memberId, aptId) {
     try {
       stmt.bind([aptId]);
       stmt.step();
-      count = stmt.getAsObject()['cnt'] ?? 0;
+      count = stmt.getAsObject()['cnt'];
     } finally {
       stmt.free();
     }

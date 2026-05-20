@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   crc32,
   zipcryptoEncrypt,
@@ -291,5 +291,45 @@ describe('readPrj / writePrj round-trip', () => {
     const prjBytes = await writePrj({ dbBytes, prjCtx: null });
     const result   = await readPrj(prjBytes.buffer);
     expect(result.dbBytes).toEqual(dbBytes);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deflate / inflate stream error paths
+// ---------------------------------------------------------------------------
+
+describe('deflate / inflate error paths', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('deflate: rejects when CompressionStream writer throws', async () => {
+    vi.stubGlobal('CompressionStream', class {
+      constructor() {
+        this.readable = { getReader: () => ({ read: async () => ({ done: true }), cancel: async () => {} }) };
+        this.writable = { getWriter: () => ({ write: async () => { throw new Error('write fail'); }, close: async () => {} }) };
+      }
+    });
+    await expect(writePrj({ dbBytes: new TextEncoder().encode('x'), prjCtx: null })).rejects.toThrow('write fail');
+  });
+
+  it('deflate: rejects when CompressionStream reader throws', async () => {
+    vi.stubGlobal('CompressionStream', class {
+      constructor() {
+        this.readable = { getReader: () => ({ read: async () => { throw new Error('read fail'); }, cancel: async () => {} }) };
+        this.writable = { getWriter: () => ({ write: async () => {}, close: async () => {} }) };
+      }
+    });
+    await expect(writePrj({ dbBytes: new TextEncoder().encode('x'), prjCtx: null })).rejects.toThrow('read fail');
+  });
+
+  it('inflate: rejects when DecompressionStream writer throws', async () => {
+    const dbBytes  = new TextEncoder().encode('FobForge-'.repeat(120));
+    const prjBytes = await writePrj({ dbBytes, prjCtx: null });
+    vi.stubGlobal('DecompressionStream', class {
+      constructor() {
+        this.readable = { getReader: () => ({ read: async () => ({ done: true }), cancel: async () => {} }) };
+        this.writable = { getWriter: () => ({ write: async () => { throw new Error('decompress fail'); }, close: async () => {} }) };
+      }
+    });
+    await expect(readPrj(prjBytes.buffer)).rejects.toThrow('decompress fail');
   });
 });
